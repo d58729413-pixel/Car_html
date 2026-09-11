@@ -14,8 +14,9 @@ canvas{position:fixed;inset:0;width:100%;height:100%}
 h1{font-size:22px;color:#fc0}h2{font-size:16px;color:#4fc3f7}p{font-size:12px;color:#ccc}
 button{padding:12px 20px;font-size:14px;font-weight:bold;background:linear-gradient(180deg,#4fc3f7,#0288d1);color:#fff;border:none;border-radius:10px;width:100%;max-width:280px}
 button.bk{background:linear-gradient(180deg,#888,#555)}
-#garage,#ach{justify-content:flex-start!important;padding-top:20px!important}
-#gl,#al{width:100%;max-width:360px;overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y;padding:6px 0;flex:1;min-height:0}
+#garage,#ach{justify-content:flex-start!important;padding-top:10px!important;overflow:hidden!important}
+#gl,#al{width:100%;max-width:360px;overflow-y:auto!important;overflow-x:hidden;-webkit-overflow-scrolling:touch;touch-action:pan-y;padding:6px 0;flex:1 1 auto;min-height:0;max-height:calc(100vh - 160px)}
+#garage .bk,#ach .bk{flex-shrink:0}
 .cc,.ac{background:#1e1e1e;border:2px solid #333;border-radius:9px;padding:10px;margin:5px 0;display:flex;justify-content:space-between;align-items:center;font-size:12px;gap:8px}
 .cc.on{border-color:#4caf50}.cc.act{border-color:#fc0;background:#2a2410}
 .ac.done{border-color:#4caf50;background:#0e1a0e}
@@ -55,6 +56,7 @@ button.bk{background:linear-gradient(180deg,#888,#555)}
 </div>
 <div id="menu">
 <h1 id="logo">🏎️ ОБГОН</h1>
+<button onclick="openAdmin()" style="background:rgba(0,0,0,.5);max-width:120px;font-size:11px;padding:8px;border:1px solid #444">🔐 Админ</button>
 <button onclick="start()">🚗 ИГРАТЬ</button>
 <button class="bk" onclick="showGarage()">🔧 ГАРАЖ</button>
 <button class="bk" onclick="showAch()">🏆 ДОСТИЖЕНИЯ</button>
@@ -306,10 +308,14 @@ $('toiletCount').textContent=S.toiletCoins;
 }
 
 // ===== АДМИНКА =====
-var logoClicks=0,logoTimer=null;
+function openAdmin(){
+$('adminPass').value='';
+$('adminMsg').textContent='';
+$('admin').style.display='flex';
+}
 function checkAdmin(){
 var p=$('adminPass').value;
-if(p==='BeansADMINIKAK'){
+if(p==='67Bean66Beanpisu'){
 $('adminMsg').textContent='✓ Доступ разрешён!';
 $('adminMsg').style.color='#4caf50';
 setTimeout(function(){showAdminPanel();},600);
@@ -371,21 +377,6 @@ location.reload();
 }
 function closeAdmin(){
 $('admin').style.display='none';
-}
-function bindLogo(){
-var logo=$('logo');
-if(!logo)return;
-logo.addEventListener('click',function(){
-logoClicks++;
-clearTimeout(logoTimer);
-logoTimer=setTimeout(function(){logoClicks=0;},800);
-if(logoClicks>=3){
-logoClicks=0;
-$('adminPass').value='';
-$('adminMsg').textContent='';
-$('admin').style.display='flex';
-}
-});
 }
 
 // ===== МЕНЮ =====
@@ -682,7 +673,7 @@ function isEve(){return timeOfDay>0.75&&timeOfDay<0.9;}
 
 function rainbowColor(offset){
 return 'hsl('+((rainbowHue+offset)%360)+',100%,55%)';
-                    }function drawCity(){
+  }function drawCity(){
 var rw=W*0.65;
 var rx=(W-rw)/2;
 var bw=60,gap=90;
@@ -990,13 +981,12 @@ requestAnimationFrame(loop);
 
 resize();
 showMenu();
-bindLogo();
 updateClownHud();
 requestAnimationFrame(loop);
 
 setInterval(function(){
 if(S.coins<50)return;
-if(Math.random()<0.05)showMrBean();
+if(Math.random()<0.3)showMrBean();
 },10000);
 
 window.addEventListener('resize',resize);
