@@ -215,15 +215,13 @@ toast('🏆 '+a.n+'\n+'+a.r+'💰');
 }
 if(nd)save();
 return nd;
-}// ===== ЭФФЕКТЫ =====
-var rainbowMode=false;
+}var rainbowMode=false;
 var beanBonus=false;
 var noEnemies=false;
 var sizeBoost=false;
 var clownMode=false;
 var skibidiMode=false;
 
-// ===== MR BEAN + DEEPSEEK =====
 var mrbeanOn=false;
 function showMrBean(){
 if(mrbeanOn)return;
@@ -231,15 +229,12 @@ mrbeanOn=true;
 var el=$('mrbean');
 var txt=$('mrbeanTxt');
 var ava=el.querySelector('.ava');
-
 function say(who,msg,dur,next){
 ava.textContent=(who==='bean')?'😎':'🐉';
 txt.textContent=((who==='bean')?'MR BEAN: ':'DEEPSEEK: ')+msg;
 setTimeout(next,dur);
 }
-
 el.classList.add('show');
-
 say('bean','Привет всем!!!',3000,function(){
 say('bean','Готовы?)',3000,function(){
 S.coins+=200;
@@ -307,12 +302,12 @@ $('toiletCount').textContent=S.toiletCoins;
 }else t.style.display='none';
 }
 
-// ===== АДМИНКА =====
 function openAdmin(){
 $('adminPass').value='';
 $('adminMsg').textContent='';
 $('admin').style.display='flex';
 }
+
 function checkAdmin(){
 var p=$('adminPass').value;
 if(p==='67Bean66Beanpisu'){
@@ -325,6 +320,7 @@ $('adminMsg').style.color='#ff5252';
 $('adminPass').value='';
 }
 }
+
 function showAdminPanel(){
 var a=$('admin');
 a.innerHTML='<h2>⚙️ АДМИН-ПАНЕЛЬ</h2>'+
@@ -338,12 +334,14 @@ a.innerHTML='<h2>⚙️ АДМИН-ПАНЕЛЬ</h2>'+
 '<button class="bk" onclick="closeAdmin()">← Закрыть</button>'+
 '<div class="admin-ok" id="adminLog"></div>';
 }
+
 function adminGive(n){
 S.coins+=n;
 save();
 var log=$('adminLog');
 if(log)log.textContent='+'+n+' 💰 выдано';
 }
+
 function adminUnlockAll(){
 S.owned=[];
 for(var i=0;i<CARS.length;i++)S.owned.push(i);
@@ -351,6 +349,7 @@ save();
 var log=$('adminLog');
 if(log)log.textContent='Все машины открыты!';
 }
+
 function adminUnlockAch(){
 S.done=[];
 for(var i=0;i<ACHS.length;i++)S.done.push(ACHS[i].id);
@@ -358,28 +357,31 @@ save();
 var log=$('adminLog');
 if(log)log.textContent='Все достижения открыты!';
 }
+
 function adminAddClown(){
 S.clownCoins=(S.clownCoins||0)+1;
 save();updateClownHud();
 var log=$('adminLog');
 if(log)log.textContent='+1 🤡';
 }
+
 function adminAddToilet(){
 S.toiletCoins=(S.toiletCoins||0)+1;
 save();updateClownHud();
 var log=$('adminLog');
 if(log)log.textContent='+1 🚽';
 }
+
 function adminReset(){
 if(!confirm('Точно сбросить ВСЁ?'))return;
 localStorage.removeItem('obgon7');
 location.reload();
 }
+
 function closeAdmin(){
 $('admin').style.display='none';
 }
 
-// ===== МЕНЮ =====
 function showMenu(){
 $('menu').classList.remove('h');
 $('garage').classList.add('h');
@@ -392,11 +394,13 @@ $('mp').textContent=S.prestige;
 gameOn=false;
 save();
 }
+
 function showGarage(){
 $('menu').classList.add('h');
 $('garage').classList.remove('h');
 renderG();
 }
+
 function showAch(){
 $('menu').classList.add('h');
 $('ach').classList.remove('h');
@@ -547,17 +551,6 @@ el.addEventListener('touchcancel',off,{passive:false});
 el.addEventListener('mousedown',on);
 el.addEventListener('mouseup',off);
 }
-bind($('bl'),'l');
-bind($('br'),'r');
-
-window.addEventListener('keydown',function(e){
-if(e.key==='ArrowLeft'||e.key==='a')inp.l=1;
-if(e.key==='ArrowRight'||e.key==='d')inp.r=1;
-});
-window.addEventListener('keyup',function(e){
-if(e.key==='ArrowLeft'||e.key==='a')inp.l=0;
-if(e.key==='ArrowRight'||e.key==='d')inp.r=0;
-});
 
 function update(dt){
 if(!gameOn||!P)return;
@@ -982,6 +975,8 @@ requestAnimationFrame(loop);
 resize();
 showMenu();
 updateClownHud();
+bind($('bl'),'l');
+bind($('br'),'r');
 requestAnimationFrame(loop);
 
 setInterval(function(){
