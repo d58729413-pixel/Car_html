@@ -19,7 +19,7 @@ h1{font-size:22px;color:#fc0}h2{font-size:16px;color:#4fc3f7}p{font-size:12px;co
 button{padding:12px 20px;font-size:14px;font-weight:bold;background:linear-gradient(180deg,#4fc3f7,#0288d1);color:#fff;border:none;border-radius:10px;width:100%;max-width:280px}
 button.bk{background:linear-gradient(180deg,#888,#555)}
 button.off{background:linear-gradient(180deg,#8d6e63,#5d4037)}
-button.f1{background:linear-gradient(180deg,#c62828,#8e0000)}
+button.rbr{background:linear-gradient(180deg,#1a237e,#0d1456)}
 #garage,#ach{justify-content:flex-start!important;padding-top:10px!important;overflow:hidden!important}
 #gl,#al{width:100%;max-width:360px;overflow-y:auto!important;overflow-x:hidden;-webkit-overflow-scrolling:touch;touch-action:pan-y;padding:6px 0;flex:1 1 auto;min-height:0;max-height:calc(100vh - 160px)}
 #garage .bk,#ach .bk{flex-shrink:0}
@@ -69,7 +69,6 @@ button.f1{background:linear-gradient(180deg,#c62828,#8e0000)}
 <button onclick="openAdmin()" style="background:rgba(0,0,0,.5);max-width:120px;font-size:11px;padding:8px;border:1px solid #444">🔐 Админ</button>
 <button onclick="start()">🚗 ИГРАТЬ</button>
 <button class="off" onclick="startOffroad()">🚙 ВНЕДОРОЖЬЕ</button>
-<button class="f1" onclick="startF1()">🏁 ФОРМУЛА-1</button>
 <button class="bk" onclick="showGarage()">🔧 ГАРАЖ</button>
 <button class="bk" onclick="showAch()">🏆 ДОСТИЖЕНИЯ</button>
 <p>💰 <span id="mc">0</span></p>
@@ -136,8 +135,8 @@ var CARS=[
 {n:"Pagani Huayra",m:400,p:10000000,c:'#6a1b9a',ac:null,t:2}
 ];
 
-var F1={n:"Болид Формулы-1",m:31,p:0,
-c:'#e53935',ac:'#fff',t:2,isF1:true};
+var F1={n:"Red Bull F1",m:31,p:0,
+c:'#1a237e',ac:'#ffd600',t:2,isF1:true};
 
 var ACHS=[
 {id:'f1',n:"🎯 Первый обгон",d:"Обгони 1 машину",r:10,
@@ -169,7 +168,7 @@ chk:function(s){return s.owned.indexOf(3)>=0}},
 {id:'sup',n:"🏎️ Суперкар",d:"Купи любой суперкар",r:200,
 chk:function(s){for(var i=0;i<s.owned.length;i++)
 if(CARS[s.owned[i]].t===2)return true;return false}},
-{id:'f1ach',n:"🏁 Формула-1",d:"Прокатись на болиде",r:300,
+{id:'rbr',n:"🏁 Red Bull",d:"Прокатись на болиде",r:300,
 chk:function(s){return s.f1Used||false}},
 {id:'offr',n:"🚙 Внедорожник",d:"Проедь в внедорожье 500 м",r:100,
 chk:function(s){return (s.offroadDist||0)>=500}},
@@ -192,12 +191,12 @@ done:[],recBeats:0,clownCoins:0,toiletCoins:0,
 beanDone:false,offroadBest:0,offroadDist:0,f1Used:false};
 
 try{
-var d=JSON.parse(localStorage.getItem('obgon10')||'{}');
+var d=JSON.parse(localStorage.getItem('obgon11')||'{}');
 if(d.S)for(var k in d.S)S[k]=d.S[k];
 }catch(e){}
 
 function save(){
-localStorage.setItem('obgon10',JSON.stringify({S:S}));
+localStorage.setItem('obgon11',JSON.stringify({S:S}));
 }
 setInterval(save,5000);
 
@@ -258,6 +257,7 @@ $('pedals').style.display='none';
 $('mc').textContent=fmt(S.coins);
 gameOn=false;
 gameMode='overtake';
+f1Mode=false;
 save();
 }
 
@@ -320,7 +320,8 @@ save();renderG();
 checkAch({obgony:0,sess:0,dist:0,
 owned:S.owned,recBeats:S.recBeats,
 clownCoins:S.clownCoins,
-toiletCoins:S.toiletCoins});
+toiletCoins:S.toiletCoins,
+f1Used:S.f1Used,offroadDist:S.offroadDist});
 }
 };})(i,c.p);
 }
@@ -356,7 +357,7 @@ a.innerHTML='<h2>⚙️ АДМИН-ПАНЕЛЬ</h2>'+
 '<button class="green" onclick="adminGive(1000000)">+1 000 000 💰</button>'+
 '<button class="green" onclick="adminUnlockAll()">🔓 Открыть все машины</button>'+
 '<button class="green" onclick="adminUnlockAch()">🏆 Открыть все достижения</button>'+
-'<button class="green" onclick="adminToggleF1()">🏁 Вкл/Выкл Болид</button>'+
+'<button class="rbr" onclick="adminStartF1()" style="background:linear-gradient(180deg,#1a237e,#0d1456);color:#fff">🏁 СТАТЬ БОЛИДОМ RED BULL (x31)</button>'+
 '<button class="green" onclick="adminAddClown()">🤡 +1 Клоун</button>'+
 '<button class="green" onclick="adminAddToilet()">🚽 +1 Туалет</button>'+
 '<button onclick="adminReset()">🗑️ Сбросить</button>'+
@@ -364,10 +365,12 @@ a.innerHTML='<h2>⚙️ АДМИН-ПАНЕЛЬ</h2>'+
 '<div class="admin-ok" id="adminLog"></div>';
 }
 
-function adminToggleF1(){
-f1Mode=!f1Mode;
-var log=$('adminLog');
-if(log)log.textContent=f1Mode?'🏁 Болид активен! x31':'Болид выключен';
+function adminStartF1(){
+f1Mode=true;
+S.f1Used=true;
+save();
+closeAdmin();
+start();
 }
 
 function adminGive(n){
@@ -409,7 +412,7 @@ if(log)log.textContent='+1 🚽';
 
 function adminReset(){
 if(!confirm('Точно сбросить ВСЁ?'))return;
-localStorage.removeItem('obgon10');
+localStorage.removeItem('obgon11');
 location.reload();
 }
 
@@ -519,13 +522,6 @@ initOffroad();
 gameOn=true;
 gameMode='offroad';
 f1Mode=false;
-}
-
-function startF1(){
-f1Mode=true;
-S.f1Used=true;
-save();
-start();
 }
 
 function init(){
@@ -729,6 +725,7 @@ var newRec=false;
 if(mode==='overtake'){
 if(coins>S.best){S.best=coins;newRec=true;}
 if(newRec&&lastRec>0)S.recBeats++;
+f1Mode=false;
 }else{
 if(dist>S.offroadBest)S.offroadBest=Math.floor(dist);
 if(dist>S.offroadDist)S.offroadDist=Math.floor(dist);
@@ -886,13 +883,6 @@ ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);ctx.fill();
 ctx.strokeStyle='rgba(90,60,30,.8)';
 ctx.lineWidth=3;
 ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);ctx.stroke();
-ctx.fillStyle='rgba(139,90,43,.7)';
-for(var k=0;k<6;k++){
-var a=k*(Math.PI/3);
-ctx.beginPath();
-ctx.arc(p.x+Math.cos(a)*p.r*1.1,p.y+Math.sin(a)*p.r*1.1,3,0,7);
-ctx.fill();
-}
 }
 }
 
@@ -928,13 +918,6 @@ ctx.lineTo(w/2-6,h*0.1);
 ctx.lineTo(w/2-8,h*0.32);
 ctx.lineTo(-w/2+8,h*0.32);
 ctx.closePath();ctx.fill();
-ctx.fillStyle='rgba(180,220,255,.25)';
-ctx.beginPath();
-ctx.moveTo(-w/2+7,h*0.13);
-ctx.lineTo(-w/2+15,h*0.13);
-ctx.lineTo(-w/2+13,h*0.3);
-ctx.lineTo(-w/2+8,h*0.3);
-ctx.closePath();ctx.fill();
 ctx.fillStyle=color;
 ctx.fillRect(-w/2+6,-h/2+8,w-12,h*0.35);
 ctx.fillStyle='rgba(0,0,0,.15)';
@@ -942,18 +925,6 @@ ctx.fillRect(-w/2+4,h*0.35,w-8,h*0.55);
 ctx.fillStyle='#fff9c4';
 ctx.beginPath();ctx.ellipse(-w/2+7,-h/2+3,5,3,0,0,7);ctx.fill();
 ctx.beginPath();ctx.ellipse(w/2-7,-h/2+3,5,3,0,0,7);ctx.fill();
-if(isNight()){
-ctx.save();
-ctx.globalCompositeOperation='lighter';
-[-w/2+7,w/2-7].forEach(function(hx){
-var g=ctx.createRadialGradient(hx,-h/2+3,2,hx,-h/2+3,50);
-g.addColorStop(0,'rgba(255,240,180,.5)');
-g.addColorStop(1,'rgba(255,240,180,0)');
-ctx.fillStyle=g;
-ctx.beginPath();ctx.arc(hx,-h/2+3,50,0,7);ctx.fill();
-});
-ctx.restore();
-}
 ctx.fillStyle='#c62828';
 ctx.fillRect(-w/2+4,h/2-4,7,4);
 ctx.fillRect(w/2-11,h/2-4,7,4);
@@ -965,6 +936,93 @@ ctx.fillRect(w/2-3,h/2-30,7,22);
 ctx.strokeStyle='rgba(255,255,255,.2)';
 ctx.lineWidth=1;
 ctx.strokeRect(-w/2+1,-h/2+1,w-2,h-2);
+ctx.restore();
+}
+
+// === БОЛИД RED BULL ===
+function drawF1Car(x,y,w,h){
+var bw=w*1.15;
+var bh=h*0.95;
+ctx.save();
+ctx.translate(x,y);
+// Тень
+ctx.fillStyle='rgba(0,0,0,.5)';
+ctx.beginPath();
+ctx.ellipse(2,4,bw*0.55,bh*0.5,0,0,7);
+ctx.fill();
+// Переднее крыло
+ctx.fillStyle='#0d1456';
+ctx.fillRect(-bw/2-4,-bh/2,bw+8,7);
+ctx.fillStyle='#ffd600';
+ctx.fillRect(-bw/2-4,-bh/2,bw+8,2);
+// Стрелка на переднем крыле
+ctx.fillStyle='#e53935';
+ctx.fillRect(-bw/2-4,-bh/2+3,bw+8,2);
+// Корпус (узкий)
+var bodyW=bw*0.35;
+ctx.beginPath();
+ctx.moveTo(-bodyW/2,-bh/2+5);
+ctx.lineTo(bodyW/2,-bh/2+5);
+ctx.lineTo(bodyW/2+2,bh/2-4);
+ctx.lineTo(-bodyW/2-2,bh/2-4);
+ctx.closePath();
+var bg=ctx.createLinearGradient(-bodyW/2,0,bodyW/2,0);
+bg.addColorStop(0,'#0d1456');
+bg.addColorStop(0.3,'#1a237e');
+bg.addColorStop(0.5,'#3f51b5');
+bg.addColorStop(0.7,'#1a237e');
+bg.addColorStop(1,'#0d1456');
+ctx.fillStyle=bg;ctx.fill();
+// Жёлтая полоса на корпусе
+ctx.fillStyle='#ffd600';
+ctx.fillRect(-bodyW/2+1,-bh/2+8,bodyW-2,3);
+// Красный акцент
+ctx.fillStyle='#e53935';
+ctx.fillRect(-bodyW/2+1,-bh/2+13,bodyW-2,2);
+// Кокпит пилота
+ctx.fillStyle='#111';
+ctx.beginPath();
+ctx.ellipse(0,0,5,8,0,0,7);
+ctx.fill();
+ctx.fillStyle='#f5a623';
+ctx.beginPath();
+ctx.arc(0,-2,3,0,7);
+ctx.fill();
+// Шлем
+ctx.fillStyle='#1a237e';
+ctx.beginPath();
+ctx.arc(0,-3,3.5,0,Math.PI);
+ctx.fill();
+// Заднее крыло
+ctx.fillStyle='#0d1456';
+ctx.fillRect(-bw/2-2,bh/2-3,bw+4,7);
+ctx.fillStyle='#ffd600';
+ctx.fillRect(-bw/2-2,bh/2+1,bw+4,2);
+ctx.fillStyle='#e53935';
+ctx.fillRect(-bw/2-2,bh/2-1,bw+4,1);
+// Стойки крыла
+ctx.fillStyle='#333';
+ctx.fillRect(-bodyW/2-2,bh/2-8,3,6);
+ctx.fillRect(bodyW/2-1,bh/2-8,3,6);
+// Задний огонь
+ctx.fillStyle='#e53935';
+ctx.beginPath();
+ctx.arc(0,bh/2-1,2,0,7);
+ctx.fill();
+// Колёса (открытые)
+ctx.fillStyle='#0a0a0a';
+// передние
+ctx.beginPath();ctx.ellipse(-bw/2+6,-bh/2+12,5,10,0,0,7);ctx.fill();
+ctx.beginPath();ctx.ellipse(bw/2-6,-bh/2+12,5,10,0,0,7);ctx.fill();
+// задние (шире)
+ctx.beginPath();ctx.ellipse(-bw/2+7,bh/2-16,6.5,13,0,0,7);ctx.fill();
+ctx.beginPath();ctx.ellipse(bw/2-7,bh/2-16,6.5,13,0,0,7);ctx.fill();
+// Диски
+ctx.fillStyle='#888';
+ctx.beginPath();ctx.ellipse(-bw/2+6,-bh/2+12,2,4,0,0,7);ctx.fill();
+ctx.beginPath();ctx.ellipse(bw/2-6,-bh/2+12,2,4,0,0,7);ctx.fill();
+ctx.beginPath();ctx.ellipse(-bw/2+7,bh/2-16,2.5,5,0,0,7);ctx.fill();
+ctx.beginPath();ctx.ellipse(bw/2-7,bh/2-16,2.5,5,0,0,7);ctx.fill();
 ctx.restore();
 }
 
@@ -1011,12 +1069,16 @@ if(skibidiMode&&e.skibidi)drawToilet(e.x,e.y,e.w,e.h);
 else drawCar(e.x,e.y,e.w,e.h,e.c,null,0,e.t,false);
 }
 if(P){
+if(f1Mode){
+var scale=sizeBoost?2:1;
+drawF1Car(P.x,P.y,P.w*scale,P.h*scale);
+}else{
 var c=CARS[S.active];
-if(f1Mode)c=F1;
 var carColor=c.c;
 if(rainbowMode)carColor=rainbowColor(0);
-var scale=sizeBoost?2:1;
-drawCar(P.x,P.y,P.w*scale,P.h*scale,carColor,c.ac,0,c.t,true);
+var scale2=sizeBoost?2:1;
+drawCar(P.x,P.y,P.w*scale2,P.h*scale2,carColor,c.ac,0,c.t,true);
+}
 }
 
 if(isNight()&&!rainbowMode){
@@ -1034,10 +1096,10 @@ ctx.textAlign='center';
 ctx.fillText('⭐ x2 АКТИВЕН',W/2,60);
 }
 if(f1Mode){
-ctx.fillStyle='rgba(255,50,50,.95)';
-ctx.font='bold 14px sans-serif';
+ctx.fillStyle='rgba(255,214,0,.95)';
+ctx.font='bold 15px sans-serif';
 ctx.textAlign='center';
-ctx.fillText('🏁 БОЛИД x31',W/2,80);
+ctx.fillText('🏁 RED BULL x31',W/2,80);
 }
 }
 
