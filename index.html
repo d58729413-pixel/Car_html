@@ -142,7 +142,7 @@ var CARS=[
 {n:"McLaren P1",m:150,p:2500000,c:'#ff6f00',ac:null,t:2},
 {n:"Koenigsegg",m:250,p:5000000,c:'#455a64',ac:null,t:2},
 {n:"Pagani Huayra",m:400,p:10000000,c:'#6a1b9a',ac:null,t:2},
-{n:"🏁 Red Bull F1",m:100,p:500000,c:'#1a237e',ac:'#ffd600',t:2,isRBR:true,sale:true}
+{n:"🏁 Red Bull F1",m:200,p:1000000,c:'#1a237e',ac:'#ffd600',t:2,isRBR:true,sale:true}
 ];
 
 var F1={n:"Red Bull F1",m:31,p:0,
@@ -202,12 +202,12 @@ beanDone:false,offroadBest:0,offroadDist:0,f1Used:false,
 secretFound:false,bossBeaten:false};
 
 try{
-var d=JSON.parse(localStorage.getItem('obgon13')||'{}');
+var d=JSON.parse(localStorage.getItem('obgon14')||'{}');
 if(d.S)for(var k in d.S)S[k]=d.S[k];
 }catch(e){}
 
 function save(){
-localStorage.setItem('obgon13',JSON.stringify({S:S}));
+localStorage.setItem('obgon14',JSON.stringify({S:S}));
 }
 setInterval(save,5000);
 
@@ -434,7 +434,7 @@ if(log)log.textContent='+1 🚽';
 
 function adminReset(){
 if(!confirm('Точно сбросить ВСЁ?'))return;
-localStorage.removeItem('obgon13');
+localStorage.removeItem('obgon14');
 location.reload();
 }
 
@@ -639,8 +639,10 @@ t:ts[Math.floor(Math.random()*ts.length)],
 skibidi:false,
 lane:l,
 targetLane:l,
-turnTimer:0,
-canTurn:false
+turnTimer:1+Math.random()*2,
+warningTimer:0,
+warningActive:false,
+turnCooldown:0
 });
 }
 
@@ -692,23 +694,40 @@ for(i=0;i<enemies.length;i++){
 var e=enemies[i];
 e.y+=e.s;
 
-// Поворот ботов
+// Поворот ботов с предупреждением
 if(canTurn&&!e.pass){
+var playerNear=Math.abs(e.y-P.y)<180&&Math.abs(e.x-P.x)<150;
 e.turnTimer-=dt;
-if(e.turnTimer<=0){
-e.turnTimer=1+Math.random()*2;
+e.turnCooldown-=dt;
+
+if(playerNear&&!e.warningActive){
+e.turnTimer=Math.max(e.turnTimer,0.5);
+}
+
+if(e.turnTimer<=0&&e.turnCooldown<=0&&!playerNear){
 var newLane=e.lane+(Math.random()<0.5?-1:1);
-if(newLane<0)newLane=1;
-if(newLane>2)newLane=1;
-if(newLane!==e.lane&&Math.random()<0.6){
+if(newLane<0)newLane=0;
+if(newLane>2)newLane=2;
+if(newLane!==e.lane){
 e.targetLane=newLane;
-e.lane=newLane;
+e.warningActive=true;
+e.warningTimer=0.7;
+e.turnTimer=2+Math.random()*2;
 }
 }
-// Плавное движение к целевой полосе
+
+if(e.warningActive){
+e.warningTimer-=dt;
+if(e.warningTimer<=0){
+e.warningActive=false;
+e.lane=e.targetLane;
+e.turnCooldown=1.5;
+}
+}
+
 var lw=rw/3;
 var targetX=rx+lw*e.targetLane+lw/2;
-e.x+=(targetX-e.x)*0.03;
+e.x+=(targetX-e.x)*0.05;
 }
 
 if(Math.abs(e.x-P.x)<P.w-6&&Math.abs(e.y-P.y)<P.h-6){
@@ -1047,7 +1066,7 @@ $('hpBar').style.display='none';
 function restartMode(){
 if(gameMode==='overtake')start();
 else startOffroad();
-                             }function mix(a,b,k){
+   }function mix(a,b,k){
 var pa=[parseInt(a.slice(1,3),16),
 parseInt(a.slice(3,5),16),
 parseInt(a.slice(5,7),16)];
@@ -1452,6 +1471,33 @@ for(i=0;i<enemies.length;i++){
 var e=enemies[i];
 if(skibidiMode&&e.skibidi)drawToilet(e.x,e.y,e.w,e.h);
 else drawCar(e.x,e.y,e.w,e.h,e.c,null,0,e.t,false);
+// Предупреждение о повороте
+if(e.warningActive){
+var blink=(Math.floor(e.warningTimer*10)%2===0);
+if(blink){
+var dir=e.targetLane>e.lane?1:-1;
+ctx.save();
+ctx.fillStyle='#ffcc00';
+ctx.strokeStyle='#000';
+ctx.lineWidth=3;
+var ax=e.x+dir*35;
+var ay=e.y;
+ctx.beginPath();
+if(dir>0){
+ctx.moveTo(ax-10,ay-15);
+ctx.lineTo(ax+10,ay);
+ctx.lineTo(ax-10,ay+15);
+}else{
+ctx.moveTo(ax+10,ay-15);
+ctx.lineTo(ax-10,ay);
+ctx.lineTo(ax+10,ay+15);
+}
+ctx.closePath();
+ctx.fill();
+ctx.stroke();
+ctx.restore();
+}
+}
 }
 if(P){
 if(f1Mode){
