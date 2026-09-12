@@ -202,12 +202,12 @@ beanDone:false,offroadBest:0,offroadDist:0,f1Used:false,
 secretFound:false,bossBeaten:false};
 
 try{
-var d=JSON.parse(localStorage.getItem('obgon15')||'{}');
+var d=JSON.parse(localStorage.getItem('obgon16')||'{}');
 if(d.S)for(var k in d.S)S[k]=d.S[k];
 }catch(e){}
 
 function save(){
-localStorage.setItem('obgon15',JSON.stringify({S:S}));
+localStorage.setItem('obgon16',JSON.stringify({S:S}));
 }
 setInterval(save,5000);
 
@@ -434,7 +434,7 @@ if(log)log.textContent='+1 🚽';
 
 function adminReset(){
 if(!confirm('Точно сбросить ВСЁ?'))return;
-localStorage.removeItem('obgon15');
+localStorage.removeItem('obgon16');
 location.reload();
 }
 
@@ -587,7 +587,8 @@ vx:0};
 enemies=[];lines=[];
 coins=0;sess=0;dist=0;speed=0;obgony=0;
 for(var i=0;i<12;i++)lines.push({y:i*80-80});
-for(var j=0;j<4;j++)spawnE(-250-j*250);
+// Стартовый спавн ботов
+for(var j=0;j<6;j++)spawnE();
 lastRec=S.best;
 }
 
@@ -616,12 +617,13 @@ var purple=(dist>=1000)&&Math.random()<0.08;
 pits.push({x:x,y:y!==undefined?y:-150,r:r,passed:false,purple:purple});
 }
 
+// ★★★ ГЛАВНАЯ ФУНКЦИЯ СПАВНА БОТОВ — ВЕЗДЕ! ★★★
 function spawnE(y){
 if(noEnemies)return;
 var rw=W*0.65;
 var rx=(W-rw)/2;
 var l=Math.floor(Math.random()*3);
-// Спавн в случайном месте полосы: центр или сбоку
+// Спавн в случайном месте внутри полосы (центр или сбоку)
 var laneW=rw/3;
 var laneX=rx+laneW*l;
 var offset=0.15+Math.random()*0.7;
@@ -629,8 +631,20 @@ var x=laneX+laneW*offset;
 var cs=['#e53935','#43a047','#1e88e5',
 '#fb8c00','#8e24aa','#00acc1','#d81b60'];
 var ts=[0,1,2,4];
+// ★ y — разная! Если передали — используем. Иначе — 50% сверху, 50% в середине экрана
+var spawnY;
+if(y!==undefined){
+spawnY=y;
+}else{
+if(Math.random()<0.5){
+spawnY=-150;
+}else{
+// В середине экрана (но выше игрока)
+spawnY=80+Math.random()*(H*0.55);
+}
+}
 enemies.push({
-x:x,y:y!==undefined?y:-150,
+x:x,y:spawnY,
 w:P.w,h:P.h,
 c:cs[Math.floor(Math.random()*cs.length)],
 s:2+Math.random()*1.5,
@@ -743,7 +757,9 @@ floats.push({t:'+'+g,x:e.x,y:e.y,l:1});
 }
 
 enemies=enemies.filter(function(e){return e.y<H+200;});
-if(!noEnemies&&enemies.length<6&&Math.random()<0.04)spawnE(-150);
+
+// ★★★ СПАВН — ЛИМИТ 10, ШАНС 10%, БЕЗ y (случайное место) ★★★
+if(!noEnemies&&enemies.length<10&&Math.random()<0.1)spawnE();
 
 dist+=1.4;
 speed=Math.floor(180+Math.abs(P.vx)*20);
