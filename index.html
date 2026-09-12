@@ -202,12 +202,12 @@ beanDone:false,offroadBest:0,offroadDist:0,f1Used:false,
 secretFound:false,bossBeaten:false};
 
 try{
-var d=JSON.parse(localStorage.getItem('obgon19')||'{}');
+var d=JSON.parse(localStorage.getItem('obgon20')||'{}');
 if(d.S)for(var k in d.S)S[k]=d.S[k];
 }catch(e){}
 
 function save(){
-localStorage.setItem('obgon19',JSON.stringify({S:S}));
+localStorage.setItem('obgon20',JSON.stringify({S:S}));
 }
 setInterval(save,5000);
 
@@ -434,7 +434,7 @@ if(log)log.textContent='+1 🚽';
 
 function adminReset(){
 if(!confirm('Точно сбросить ВСЁ?'))return;
-localStorage.removeItem('obgon19');
+localStorage.removeItem('obgon20');
 location.reload();
 }
 
@@ -587,7 +587,6 @@ vx:0};
 enemies=[];lines=[];
 coins=0;sess=0;dist=0;speed=0;obgony=0;
 for(var i=0;i<12;i++)lines.push({y:i*80-80});
-// ★ УМЕНЬШЕНО: стартовых ботов 4 → 2 ★
 for(var j=0;j<2;j++)spawnNormalBot(-250-j*250);
 lastRec=S.best;
 }
@@ -608,26 +607,26 @@ for(var i=0;i<10;i++)lines.push({y:i*70-70});
 for(var j=0;j<5;j++)spawnPit(-200-j*180);
 }
 
+// Ямы: фиолетовые чаще (8% → 20%)
 function spawnPit(y){
 var rw=W*0.75;
 var rx=(W-rw)/2;
 var x=rx+30+Math.random()*(rw-60);
 var r=25+Math.random()*15;
-var purple=(dist>=1000)&&Math.random()<0.08;
+var purple=(dist>=1000)&&Math.random()<0.2;
 pits.push({x:x,y:y!==undefined?y:-150,r:r,passed:false,purple:purple});
 }
 
-// ОБЫЧНЫЙ БОТ — едет сверху, может поворачивать
-// Спавнится ТОЛЬКО в правой полосе (l=2)
+// ОБЫЧНЫЙ БОТ — едет сверху вниз, может поворачивать
+// Спавнится ТОЛЬКО сверху за экраном, РОВНО ПО ЦЕНТРУ правой полосы
 function spawnNormalBot(y){
 if(noEnemies)return;
 var rw=W*0.65;
 var rx=(W-rw)/2;
 var l=2;
 var laneW=rw/3;
-var laneX=rx+laneW*l;
-var offset=0.25+Math.random()*0.5;
-var x=laneX+laneW*offset;
+// РОВНО ПО ЦЕНТРУ правой полосы
+var x=rx+laneW*l+laneW*0.5;
 var cs=['#e53935','#43a047','#1e88e5',
 '#fb8c00','#8e24aa','#00acc1','#d81b60'];
 var ts=[0,1,2,4];
@@ -649,21 +648,20 @@ fromAhead:false
 });
 }
 
-// БОТ "В ЛОБ" — спавнится прямо перед игроком, не поворачивает
-// Спавнится только в левой (0) или центральной (1) полосе
+// БОТ "В ЛОБ" — спавнится прямо перед игроком в левой/центральной полосе
+// РОВНО ПО ЦЕНТРУ полосы. НЕ ПОВОРАЧИВАЕТ.
 function spawnAheadBot(){
 if(noEnemies)return;
 var rw=W*0.65;
 var rx=(W-rw)/2;
 var l=Math.random()<0.5?0:1;
 var laneW=rw/3;
-var laneX=rx+laneW*l;
-var offset=0.3+Math.random()*0.4;
-var x=laneX+laneW*offset;
+// РОВНО ПО ЦЕНТРУ полосы
+var x=rx+laneW*l+laneW*0.5;
 var cs=['#e53935','#43a047','#1e88e5',
 '#fb8c00','#8e24aa','#00acc1','#d81b60'];
 var ts=[0,1,2,4];
-var spawnY=P.y-250-Math.random()*50;
+var spawnY=P.y-280-Math.random()*50;
 enemies.push({
 x:x,y:spawnY,
 w:P.w,h:P.h,
@@ -739,9 +737,8 @@ e.turnTimer=Math.max(e.turnTimer,0.5);
 }
 
 if(e.turnTimer<=0&&e.turnCooldown<=0&&!playerNear){
-var newLane=e.lane+(Math.random()<0.5?-1:1);
-if(newLane<0)newLane=0;
-if(newLane>2)newLane=2;
+// Обычные боты поворачивают только в пределах ПРАВОЙ+ЦЕНТРАЛЬНОЙ
+var newLane=1+Math.floor(Math.random()*2); // 1 или 2 (не левая)
 if(newLane!==e.lane){
 e.targetLane=newLane;
 e.warningActive=true;
@@ -760,8 +757,9 @@ e.turnCooldown=1.5;
 }
 
 var lw=rw/3;
-var targetX=rx+lw*e.targetLane+lw/2;
-e.x+=(targetX-e.x)*0.05;
+// Едет строго по центру полосы
+var targetX=rx+lw*e.targetLane+lw*0.5;
+e.x+=(targetX-e.x)*0.06;
 }
 
 if(Math.abs(e.x-P.x)<P.w-6&&Math.abs(e.y-P.y)<P.h-6){
@@ -780,12 +778,10 @@ floats.push({t:'+'+g,x:e.x,y:e.y,l:1});
 
 enemies=enemies.filter(function(e){return e.y<H+200;});
 
-// ★★★ УМЕНЬШЕНО КОЛИЧЕСТВО БОТОВ ★★★
-// Обычные: лимит 10→5, шанс 5%→2%
-// В лоб: шанс 3%→1.2%
+// Спавн
 if(!noEnemies){
 if(enemies.length<5&&Math.random()<0.02)spawnNormalBot();
-if(dist>=100&&Math.random()<0.012)spawnAheadBot();
+if(dist>=100&&Math.random()<0.015)spawnAheadBot();
 }
 
 dist+=1.4;
@@ -1409,64 +1405,159 @@ ctx.fillText('⚠️ УКЛОНЯЙСЯ!',W/2,70);
 }
 }
 
+// ★★★ УЛУЧШЕННЫЙ БОЛИД F1 RED BULL ★★★
 function drawF1Car(x,y,w,h){
-var bw=w*1.15;
-var bh=h*0.95;
+var bw=w*1.4;  // шире — как настоящая F1
+var bh=h*1.0;
 ctx.save();
 ctx.translate(x,y);
-ctx.fillStyle='rgba(0,0,0,.5)';
+
+// Тень
+ctx.fillStyle='rgba(0,0,0,.55)';
 ctx.beginPath();
-ctx.ellipse(2,4,bw*0.55,bh*0.5,0,0,7);
+ctx.ellipse(3,5,bw*0.6,bh*0.5,0,0,7);
 ctx.fill();
+
+// === ПЕРЕДНЕЕ КРЫЛО (широкое) ===
 ctx.fillStyle='#0d1456';
-ctx.fillRect(-bw/2-4,-bh/2,bw+8,7);
+ctx.fillRect(-bw/2-8,-bh/2-2,bw+16,8);
 ctx.fillStyle='#ffd600';
-ctx.fillRect(-bw/2-4,-bh/2,bw+8,2);
+ctx.fillRect(-bw/2-8,-bh/2-2,bw+16,3);
 ctx.fillStyle='#e53935';
-ctx.fillRect(-bw/2-4,-bh/2+3,bw+8,2);
-var bodyW=bw*0.35;
+ctx.fillRect(-bw/2-8,-bh/2+3,bw+16,3);
+// Красный бык на крыле
+ctx.fillStyle='#e53935';
 ctx.beginPath();
-ctx.moveTo(-bodyW/2,-bh/2+5);
-ctx.lineTo(bodyW/2,-bh/2+5);
-ctx.lineTo(bodyW/2+2,bh/2-4);
-ctx.lineTo(-bodyW/2-2,bh/2-4);
+ctx.arc(-bw/4,-bh/2+4,2,0,7);
+ctx.fill();
+
+// === НОСОВОЙ ОБТЕКАТЕЛЬ (узкий к центру) ===
+ctx.fillStyle='#0d1456';
+ctx.beginPath();
+ctx.moveTo(-bw*0.15,-bh/2+5);
+ctx.lineTo(bw*0.15,-bh/2+5);
+ctx.lineTo(bw*0.1,-bh/4);
+ctx.lineTo(-bw*0.1,-bh/4);
 ctx.closePath();
-var bg=ctx.createLinearGradient(-bodyW/2,0,bodyW/2,0);
-bg.addColorStop(0,'#0d1456');
+ctx.fill();
+// Жёлтая полоса на носу
+ctx.fillStyle='#ffd600';
+ctx.fillRect(-bw*0.15,-bh/2+8,bw*0.3,3);
+// Красный акцент
+ctx.fillStyle='#e53935';
+ctx.fillRect(-bw*0.08,-bh/2+5,bw*0.16,2);
+
+// === КОРПУС (основной монокок) ===
+ctx.beginPath();
+ctx.moveTo(-bw*0.2,-bh*0.2);
+ctx.lineTo(bw*0.2,-bh*0.2);
+ctx.lineTo(bw*0.25,bh*0.35);
+ctx.lineTo(-bw*0.25,bh*0.35);
+ctx.closePath();
+var bg=ctx.createLinearGradient(-bw*0.25,0,bw*0.25,0);
+bg.addColorStop(0,'#0a0e3a');
 bg.addColorStop(0.3,'#1a237e');
 bg.addColorStop(0.5,'#3f51b5');
 bg.addColorStop(0.7,'#1a237e');
-bg.addColorStop(1,'#0d1456');
+bg.addColorStop(1,'#0a0e3a');
 ctx.fillStyle=bg;ctx.fill();
+
+// Жёлтые и красные полосы вдоль корпуса
 ctx.fillStyle='#ffd600';
-ctx.fillRect(-bodyW/2+1,-bh/2+8,bodyW-2,3);
+ctx.fillRect(-bw*0.05,-bh*0.2,bw*0.1,bh*0.55);
 ctx.fillStyle='#e53935';
-ctx.fillRect(-bodyW/2+1,-bh/2+13,bodyW-2,2);
-ctx.fillStyle='#111';
-ctx.beginPath();ctx.ellipse(0,0,5,8,0,0,7);ctx.fill();
-ctx.fillStyle='#f5a623';
-ctx.beginPath();ctx.arc(0,-2,3,0,7);ctx.fill();
-ctx.fillStyle='#1a237e';
-ctx.beginPath();ctx.arc(0,-3,3.5,0,Math.PI);ctx.fill();
+ctx.fillRect(-bw*0.2,-bh*0.15,3,bh*0.45);
+ctx.fillRect(bw*0.2-3,-bh*0.15,3,bh*0.45);
+
+// === КОКПИТ ПИЛОТА ===
+// Обтекатель кокпита
 ctx.fillStyle='#0d1456';
-ctx.fillRect(-bw/2-2,bh/2-3,bw+4,7);
+ctx.beginPath();
+ctx.ellipse(0,-bh*0.05,bw*0.13,bh*0.14,0,0,7);
+ctx.fill();
+// Шлем пилота (жёлтый — как у Ферстаппена)
 ctx.fillStyle='#ffd600';
-ctx.fillRect(-bw/2-2,bh/2+1,bw+4,2);
-ctx.fillStyle='#333';
-ctx.fillRect(-bodyW/2-2,bh/2-8,3,6);
-ctx.fillRect(bodyW/2-1,bh/2-8,3,6);
+ctx.beginPath();
+ctx.arc(0,-bh*0.06,bw*0.08,0,7);
+ctx.fill();
+// Визор
+ctx.fillStyle='#111';
+ctx.beginPath();
+ctx.arc(0,-bh*0.08,bw*0.07,Math.PI*1.1,Math.PI*1.9);
+ctx.fill();
+// Красная полоска на шлеме
+ctx.strokeStyle='#e53935';
+ctx.lineWidth=2;
+ctx.beginPath();
+ctx.arc(0,-bh*0.06,bw*0.08,Math.PI*0.2,Math.PI*0.8);
+ctx.stroke();
+
+// === БОРТА (боковые понтоны) ===
+ctx.fillStyle='#0d1456';
+ctx.fillRect(-bw*0.28,-bh*0.15,bw*0.08,bh*0.4);
+ctx.fillRect(bw*0.2,-bh*0.15,bw*0.08,bh*0.4);
+// Воздухозаборники
+ctx.fillStyle='#000';
+ctx.fillRect(-bw*0.28,-bh*0.1,bw*0.08,5);
+ctx.fillRect(bw*0.2,-bh*0.1,bw*0.08,5);
+
+// === ЗАДНЕЕ КРЫЛО (высокое) ===
+ctx.fillStyle='#0d1456';
+ctx.fillRect(-bw/2-4,bh*0.38,bw+8,10);
+ctx.fillStyle='#ffd600';
+ctx.fillRect(-bw/2-4,bh*0.38,bw+8,3);
 ctx.fillStyle='#e53935';
-ctx.beginPath();ctx.arc(0,bh/2-1,2,0,7);ctx.fill();
+ctx.fillRect(-bw/2-4,bh*0.45,bw+8,3);
+// Стойки заднего крыла
+ctx.fillStyle='#333';
+ctx.fillRect(-bw*0.15,bh*0.32,3,8);
+ctx.fillRect(bw*0.15-3,bh*0.32,3,8);
+
+// === ЗАДНИЙ ОГОНЬ (F1 правило) ===
+ctx.fillStyle='#e53935';
+ctx.beginPath();
+ctx.arc(0,bh*0.4,bw*0.04,0,7);
+ctx.fill();
+
+// === ДИФФУЗОР ===
+ctx.fillStyle='#1a1a1a';
+ctx.fillRect(-bw*0.15,bh*0.42,bw*0.3,5);
+
+// === ВЫХЛОП ===
+ctx.fillStyle='#666';
+ctx.beginPath();
+ctx.ellipse(0,bh*0.36,bw*0.05,3,0,0,7);
+ctx.fill();
+
+// === КОЛЁСА (открытые, 4 штуки) ===
+// Передние (узкие)
 ctx.fillStyle='#0a0a0a';
-ctx.beginPath();ctx.ellipse(-bw/2+6,-bh/2+12,5,10,0,0,7);ctx.fill();
-ctx.beginPath();ctx.ellipse(bw/2-6,-bh/2+12,5,10,0,0,7);ctx.fill();
-ctx.beginPath();ctx.ellipse(-bw/2+7,bh/2-16,6.5,13,0,0,7);ctx.fill();
-ctx.beginPath();ctx.ellipse(bw/2-7,bh/2-16,6.5,13,0,0,7);ctx.fill();
-ctx.fillStyle='#888';
-ctx.beginPath();ctx.ellipse(-bw/2+6,-bh/2+12,2,4,0,0,7);ctx.fill();
-ctx.beginPath();ctx.ellipse(bw/2-6,-bh/2+12,2,4,0,0,7);ctx.fill();
-ctx.beginPath();ctx.ellipse(-bw/2+7,bh/2-16,2.5,5,0,0,7);ctx.fill();
-ctx.beginPath();ctx.ellipse(bw/2-7,bh/2-16,2.5,5,0,0,7);ctx.fill();
+ctx.beginPath();ctx.ellipse(-bw/2-5,-bh*0.25,5,11,0,0,7);ctx.fill();
+ctx.beginPath();ctx.ellipse(bw/2+5,-bh*0.25,5,11,0,0,7);ctx.fill();
+// Задние (широкие — характерно для F1)
+ctx.beginPath();ctx.ellipse(-bw/2-5,bh*0.25,7,14,0,0,7);ctx.fill();
+ctx.beginPath();ctx.ellipse(bw/2+5,bh*0.25,7,14,0,0,7);ctx.fill();
+
+// Диски с протектором
+ctx.fillStyle='#8a8a95';
+ctx.beginPath();ctx.ellipse(-bw/2-5,-bh*0.25,2,5,0,0,7);ctx.fill();
+ctx.beginPath();ctx.ellipse(bw/2+5,-bh*0.25,2,5,0,0,7);ctx.fill();
+ctx.beginPath();ctx.ellipse(-bw/2-5,bh*0.25,3,6.5,0,0,7);ctx.fill();
+ctx.beginPath();ctx.ellipse(bw/2+5,bh*0.25,3,6.5,0,0,7);ctx.fill();
+
+// Красные полоски на шинах (Pirelli)
+ctx.strokeStyle='#e53935';
+ctx.lineWidth=1;
+ctx.beginPath();ctx.ellipse(-bw/2-5,-bh*0.25,3,6,0,0,7);ctx.stroke();
+ctx.beginPath();ctx.ellipse(bw/2+5,-bh*0.25,3,6,0,0,7);ctx.stroke();
+ctx.beginPath();ctx.ellipse(-bw/2-5,bh*0.25,4,8,0,0,7);ctx.stroke();
+ctx.beginPath();ctx.ellipse(bw/2+5,bh*0.25,4,8,0,0,7);ctx.stroke();
+
+// === ОБВОДКА ===
+ctx.strokeStyle='rgba(255,214,0,.4)';
+ctx.lineWidth=1;
+ctx.strokeRect(-bw*0.25,-bh*0.2,bw*0.5,bh*0.55);
+
 ctx.restore();
 }
 
@@ -1667,113 +1758,4 @@ ctx.quadraticCurveTo(-w/2,-h/2+2,-w/2+r,-h/2+2);
 ctx.moveTo(-w/2+r,-h/2);
 ctx.lineTo(w/2-r,-h/2);
 ctx.quadraticCurveTo(w/2,-h/2,w/2,-h/2+r);
-ctx.lineTo(w/2,h/2-r-6);
-ctx.quadraticCurveTo(w/2,h/2,w/2-r-2,h/2);
-ctx.lineTo(-w/2+r,h/2);
-ctx.quadraticCurveTo(-w/2,h/2,-w/2,h/2-r);
-ctx.lineTo(-w/2,-h/2+r);
-ctx.quadraticCurveTo(-w/2,-h/2,-w/2+r,-h/2);
-}else{
-ctx.moveTo(-w/2+r,-h/2);
-ctx.lineTo(w/2-r,-h/2);
-ctx.quadraticCurveTo(w/2,-h/2,w/2,-h/2+r);
-ctx.lineTo(w/2,h/2-r);
-ctx.quadraticCurveTo(w/2,h/2,w/2-r,h/2);
-ctx.lineTo(-w/2+r,h/2);
-ctx.quadraticCurveTo(-w/2,h/2,-w/2,h/2-r);
-ctx.lineTo(-w/2,-h/2+r);
-ctx.quadraticCurveTo(-w/2,-h/2,-w/2+r,-h/2);
-}
-ctx.closePath();
-
-var bg=ctx.createLinearGradient(-w/2,0,w/2,0);
-bg.addColorStop(0,'#5a5a65');
-bg.addColorStop(0.15,color);
-bg.addColorStop(0.35,'#fff');
-bg.addColorStop(0.5,color);
-bg.addColorStop(0.7,'#2a2a35');
-bg.addColorStop(0.85,color);
-bg.addColorStop(1,'#4a4a55');
-ctx.fillStyle=bg;ctx.fill();
-
-if(accent&&!rainbowMode){
-ctx.fillStyle=accent;
-ctx.fillRect(-w*0.15,-h/2,w*0.1,h);
-ctx.fillRect(w*0.05,-h/2,w*0.1,h);
-}
-
-ctx.fillStyle='rgba(15,20,30,.95)';
-ctx.beginPath();
-ctx.moveTo(-w/2+7,-h/2+9);
-ctx.lineTo(w/2-7,-h/2+9);
-ctx.lineTo(w/2-10,-h/2+22);
-ctx.lineTo(-w/2+10,-h/2+22);
-ctx.closePath();ctx.fill();
-
-ctx.fillStyle=color;
-ctx.fillRect(-w/2+7,-h/2+22,w-14,10);
-
-ctx.fillStyle='rgba(15,20,30,.85)';
-ctx.beginPath();
-ctx.moveTo(-w/2+9,h/2-28);
-ctx.lineTo(w/2-9,h/2-28);
-ctx.lineTo(w/2-7,h/2-14);
-ctx.lineTo(-w/2+7,h/2-14);
-ctx.closePath();ctx.fill();
-
-ctx.fillStyle='#fff9c4';
-ctx.beginPath();ctx.ellipse(-w/2+8,-h/2+3,5,3,0,0,7);ctx.fill();
-ctx.beginPath();ctx.ellipse(w/2-8,-h/2+3,5,3,0,0,7);ctx.fill();
-
-ctx.fillStyle='#c62828';
-ctx.fillRect(-w/2+4,h/2-6,7,4);
-ctx.fillRect(w/2-11,h/2-6,7,4);
-
-ctx.fillStyle='#0a0a0a';
-ctx.fillRect(-w/2-3,-h/2+12,6,18);
-ctx.fillRect(w/2-3,-h/2+12,6,18);
-ctx.fillRect(-w/2-3,h/2-22,6,18);
-ctx.fillRect(w/2-3,h/2-22,6,18);
-
-ctx.strokeStyle='rgba(255,255,255,.2)';
-ctx.lineWidth=1;
-ctx.strokeRect(-w/2+1,-h/2+1,w-2,h-2);
-
-ctx.restore();
-}
-
-var lt=performance.now();
-function loop(n){
-var dt=Math.min((n-lt)/1000,.05);
-lt=n;
-if(W<=0||H<=0)resize();
-update(dt);
-draw();
-requestAnimationFrame(loop);
-}
-
-resize();
-showMenu();
-updateClownHud();
-bind($('bl'),'l');
-bind($('br'),'r');
-bind($('pg'),'gas');
-bind($('pb'),'brk');
-requestAnimationFrame(loop);
-
-setInterval(function(){
-if(S.beanDone)return;
-if(S.coins<50)return;
-if(Math.random()<0.3){
-S.beanDone=true;
-save();
-showMrBean();
-}
-},10000);
-
-window.addEventListener('resize',resize);
-window.addEventListener('orientationchange',
-function(){setTimeout(resize,200);});
-</script>
-</body>
-</html>
+ctx.lineTo(w/2
