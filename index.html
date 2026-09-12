@@ -1,8 +1,8 @@
 <!DOCTYPE html><html><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
 <title>Обгон</title><style>
-*{margin:0;padding:0;box-sizing:border-box;user-select:none;touch-action:none}
-html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:sans-serif}
+*{margin:0;padding:0;box-sizing:border-box;user-select:none;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:sans-serif;touch-action:none}
 canvas{position:fixed;inset:0;width:100%;height:100%}
 #hud{position:fixed;top:6px;left:6px;right:6px;display:flex;justify-content:space-between;font-size:12px;z-index:6;pointer-events:none;font-weight:bold}
 #hud div{background:rgba(0,0,0,.55);padding:5px 10px;border-radius:8px}
@@ -13,24 +13,29 @@ canvas{position:fixed;inset:0;width:100%;height:100%}
 .ped{width:70px;height:70px;border-radius:50%;background:rgba(76,175,80,.4);border:2px solid #4caf50;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:bold;color:#fff}
 .ped.b{width:60px;height:60px;background:rgba(255,82,82,.4);border-color:#ff5252}
 .ped.on{filter:brightness(1.5)}
-#menu,#garage,#over,#ach{position:fixed;inset:0;background:rgba(0,0,0,.94);display:flex;flex-direction:column;justify-content:center;align-items:center;gap:10px;padding:16px;z-index:20;overflow-y:auto;text-align:center}
+#menu,#garage,#over,#ach{position:fixed;inset:0;background:rgba(0,0,0,.94);display:flex;flex-direction:column;justify-content:center;align-items:center;gap:10px;padding:16px;z-index:20;text-align:center}
+#garage,#ach{justify-content:flex-start!important;padding-top:12px!important;overflow:hidden!important}
+#gl,#al{width:100%;max-width:380px;height:70vh;overflow-y:scroll!important;overflow-x:hidden;-webkit-overflow-scrolling:touch!important;touch-action:pan-y!important;padding:6px 4px;flex:0 0 auto;border:1px solid #222;border-radius:10px;background:rgba(0,0,0,.3)}
+#gl::-webkit-scrollbar,#al::-webkit-scrollbar{width:6px}
+#gl::-webkit-scrollbar-thumb,#al::-webkit-scrollbar-thumb{background:#4fc3f7;border-radius:3px}
 .h{display:none!important}
 h1{font-size:22px;color:#fc0}h2{font-size:16px;color:#4fc3f7}p{font-size:12px;color:#ccc}
 button{padding:12px 20px;font-size:14px;font-weight:bold;background:linear-gradient(180deg,#4fc3f7,#0288d1);color:#fff;border:none;border-radius:10px;width:100%;max-width:280px}
 button.bk{background:linear-gradient(180deg,#888,#555)}
 button.off{background:linear-gradient(180deg,#8d6e63,#5d4037)}
-#garage,#ach{justify-content:flex-start!important;padding-top:10px!important;overflow:hidden!important}
-#gl,#al{width:100%;max-width:360px;overflow-y:auto!important;overflow-x:hidden;-webkit-overflow-scrolling:touch;touch-action:pan-y;padding:6px 0;flex:1 1 auto;min-height:0;max-height:calc(100vh - 160px)}
-#garage .bk,#ach .bk{flex-shrink:0}
+button.sale{background:linear-gradient(90deg,#ff0000,#ff00ff,#00ffff,#ffff00,#ff0000);background-size:400% 100%;animation:saleAnim 2s linear infinite;color:#fff;text-shadow:1px 1px 3px #000;font-weight:bold}
+@keyframes saleAnim{0%{background-position:0% 50%}100%{background-position:400% 50%}}
 .cc,.ac{background:#1e1e1e;border:2px solid #333;border-radius:9px;padding:10px;margin:5px 0;display:flex;justify-content:space-between;align-items:center;font-size:12px;gap:8px}
 .cc.on{border-color:#4caf50}.cc.act{border-color:#fc0;background:#2a2410}
+.cc.saleCard{border-color:#ff00ff;background:linear-gradient(90deg,rgba(255,0,255,.15),rgba(0,255,255,.15));animation:saleCardAnim 3s linear infinite}
+@keyframes saleCardAnim{0%{border-color:#ff0000}25%{border-color:#ff00ff}50%{border-color:#00ffff}75%{border-color:#ffff00}100%{border-color:#ff0000}}
 .ac.done{border-color:#4caf50;background:#0e1a0e}
-.cc .i,.ac .i{text-align:left;flex:1}
+.cc .i,.ac .i{text-align:left;flex:1;min-width:0}
 .cc .n,.ac .n{font-weight:bold;font-size:13px}
 .cc .d,.ac .d{font-size:10px;color:#aaa;margin-top:2px}
-.cc button{padding:7px 12px;font-size:11px;width:auto;max-width:120px}
+.cc button{padding:7px 12px;font-size:11px;width:auto;max-width:130px;flex-shrink:0}
 .cc button.on{background:#4caf50}.cc button.act{background:#fc0;color:#000}
-.ac .rew{background:#fc0;color:#000;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:bold}
+.ac .rew{background:#fc0;color:#000;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:bold;flex-shrink:0}
 .ac.done .rew{background:#4caf50;color:#fff}
 #toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.9);border:2px solid #fc0;border-radius:12px;padding:16px 24px;font-size:14px;font-weight:bold;color:#fc0;opacity:0;transition:opacity .3s;z-index:100;pointer-events:none;text-align:center}
 #toast.on{opacity:1}
@@ -42,7 +47,7 @@ button.off{background:linear-gradient(180deg,#8d6e63,#5d4037)}
 #hpBar{position:fixed;bottom:110px;left:50%;transform:translateX(-50%);width:200px;height:18px;background:rgba(0,0,0,.7);border:2px solid #fff;border-radius:9px;z-index:8;display:none;overflow:hidden}
 #hpFill{height:100%;width:100%;background:linear-gradient(90deg,#4caf50,#8bc34a);transition:width .3s}
 #hpText{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:11px;font-weight:bold;color:#fff;text-shadow:1px 1px 2px #000}
-#admin{position:fixed;inset:0;background:rgba(0,0,0,.96);display:none;flex-direction:column;justify-content:center;align-items:center;gap:10px;padding:16px;z-index:50;text-align:center}
+#admin{position:fixed;inset:0;background:rgba(0,0,0,.96);display:none;flex-direction:column;justify-content:center;align-items:center;gap:10px;padding:16px;z-index:50;text-align:center;overflow-y:auto}
 #admin h2{color:#ff5252;font-size:18px}
 #admin input{padding:12px;font-size:14px;background:#1e1e1e;color:#fff;border:2px solid #333;border-radius:8px;width:100%;max-width:280px;text-align:center;font-family:monospace}
 #admin button{padding:10px 16px;font-size:13px;font-weight:bold;background:linear-gradient(180deg,#ff5252,#c62828);color:#fff;border:none;border-radius:8px;width:100%;max-width:280px}
@@ -77,13 +82,13 @@ button.off{background:linear-gradient(180deg,#8d6e63,#5d4037)}
 <p>💰 <span id="mc">0</span></p>
 </div>
 <div id="garage" class="h">
-<h2>🔧 ГАРАЖ</h2>
+<h2>🔧 ГАРАЖ — листай ↓</h2>
 <p>💰 <span id="gc">0</span></p>
 <div id="gl"></div>
 <button class="bk" onclick="showMenu()">← Назад</button>
 </div>
 <div id="ach" class="h">
-<h2>🏆 ДОСТИЖЕНИЯ</h2>
+<h2>🏆 ДОСТИЖЕНИЯ — листай ↓</h2>
 <p>💰 <span id="ac">0</span> · <span id="ap">0</span>/22</p>
 <div id="al"></div>
 <button class="bk" onclick="showMenu()">← Назад</button>
@@ -124,6 +129,7 @@ var CARS=[
 {n:"Lada 2107",m:1,p:0,c:'#d0d0d0',ac:null,t:0},
 {n:"Honda Civic",m:2,p:500,c:'#e53935',ac:null,t:4},
 {n:"Toyota Supra",m:3,p:1500,c:'#ffb300',ac:null,t:1},
+{n:"Toyota Prius",m:4,p:3500,c:'#c8e6c9',ac:null,t:4},
 {n:"Nissan Skyline R33",m:5,p:4000,c:'#e8e8ec',ac:'#1e3a8a',t:1},
 {n:"Mazda RX-7",m:7,p:8000,c:'#43a047',ac:null,t:1},
 {n:"Subaru WRX",m:10,p:15000,c:'#039be5',ac:'#fdd835',t:0},
@@ -135,7 +141,8 @@ var CARS=[
 {n:"Lambo Aventador",m:100,p:1200000,c:'#f9a825',ac:null,t:2},
 {n:"McLaren P1",m:150,p:2500000,c:'#ff6f00',ac:null,t:2},
 {n:"Koenigsegg",m:250,p:5000000,c:'#455a64',ac:null,t:2},
-{n:"Pagani Huayra",m:400,p:10000000,c:'#6a1b9a',ac:null,t:2}
+{n:"Pagani Huayra",m:400,p:10000000,c:'#6a1b9a',ac:null,t:2},
+{n:"🏁 Red Bull F1",m:100,p:500000,c:'#1a237e',ac:'#ffd600',t:2,isRBR:true,sale:true}
 ];
 
 var F1={n:"Red Bull F1",m:31,p:0,
@@ -164,14 +171,18 @@ chk:function(s){return s.sess>=5000}},
 chk:function(s){return s.owned.length>=3}},
 {id:'buy8',n:"🏆 Автолюб",d:"Купи 8 машин",r:150,
 chk:function(s){return s.owned.length>=8}},
-{id:'buy15',n:"⭐ Гаражист",d:"Купи все 15 машин",r:500,
-chk:function(s){return s.owned.length>=15}},
-{id:'sky',n:"🇯🇵 JDM",d:"Купи Nissan Skyline",r:100,
+{id:'buyAll',n:"⭐ Гаражист",d:"Купи все машины",r:1000,
+chk:function(s){return s.owned.length>=17}},
+{id:'prius',n:"🌿 Эко-воин",d:"Купи Toyota Prius",r:100,
 chk:function(s){return s.owned.indexOf(3)>=0}},
+{id:'sky',n:"🇯🇵 JDM",d:"Купи Nissan Skyline",r:100,
+chk:function(s){return s.owned.indexOf(4)>=0}},
 {id:'sup',n:"🏎️ Суперкар",d:"Купи любой суперкар",r:200,
 chk:function(s){for(var i=0;i<s.owned.length;i++)
 if(CARS[s.owned[i]].t===2)return true;return false}},
-{id:'rbr',n:"🏁 Red Bull",d:"Прокатись на болиде",r:300,
+{id:'rbr',n:"🏁 Red Bull",d:"Купи болид в гараже",r:500,
+chk:function(s){return s.owned.indexOf(16)>=0}},
+{id:'f1ach',n:"🏁 Ф1-пилот",d:"Прокатись на болиде (админ)",r:300,
 chk:function(s){return s.f1Used||false}},
 {id:'offr',n:"🚙 Внедорожник",d:"Проедь 500 м внедорожья",r:100,
 chk:function(s){return (s.offroadDist||0)>=500}},
@@ -179,16 +190,10 @@ chk:function(s){return (s.offroadDist||0)>=500}},
 chk:function(s){return (s.secretFound||false)}},
 {id:'boss',n:"👁️ Победитель босса",d:"Проживи все 4 удара босса",r:1000,
 chk:function(s){return (s.bossBeaten||false)}},
-{id:'d500',n:"🛣️ Дальнобой",d:"Проедь 500 м",r:30,
-chk:function(s){return s.dist>=500}},
-{id:'d2000',n:"🛤️ Путешественник",d:"Проедь 2000 м",r:80,
-chk:function(s){return s.dist>=2000}},
 {id:'d5000',n:"🌍 Легенда",d:"Проедь 5000 м",r:200,
 chk:function(s){return s.dist>=5000}},
 {id:'r1',n:"🥇 Рекордсмен",d:"Побей рекорд 5 раз",r:150,
-chk:function(s){return s.recBeats>=5}},
-{id:'cl1',n:"🤡 Клоун",d:"Получи валюту клоуна",r:50,
-chk:function(s){return (s.clownCoins||0)>=1}}
+chk:function(s){return s.recBeats>=5}}
 ];
 
 var S={coins:0,owned:[0],active:0,best:0,
@@ -197,12 +202,12 @@ beanDone:false,offroadBest:0,offroadDist:0,f1Used:false,
 secretFound:false,bossBeaten:false};
 
 try{
-var d=JSON.parse(localStorage.getItem('obgon12')||'{}');
+var d=JSON.parse(localStorage.getItem('obgon13')||'{}');
 if(d.S)for(var k in d.S)S[k]=d.S[k];
 }catch(e){}
 
 function save(){
-localStorage.setItem('obgon12',JSON.stringify({S:S}));
+localStorage.setItem('obgon13',JSON.stringify({S:S}));
 }
 setInterval(save,5000);
 
@@ -308,8 +313,11 @@ var own=S.owned.indexOf(i)>=0;
 var act=S.active===i;
 var div=document.createElement('div');
 div.className='cc'+(own?' on':'')+(act?' act':'');
-div.innerHTML='<div class="i"><div class="n" style="color:'+c.c+'">'+c.n+
-'</div><div class="d">⭐ x'+c.m+'</div></div>';
+if(c.sale)div.className+=' saleCard';
+var nameHtml='<div class="n" style="color:'+c.c+'">'+c.n+'</div>';
+if(c.sale)nameHtml='<div class="n sale" style="display:inline-block;padding:2px 8px;border-radius:5px;font-size:14px">'+c.n+' 🎉 СУПЕР АКЦИЯ!</div>';
+div.innerHTML='<div class="i">'+nameHtml+
+'<div class="d">⭐ x'+c.m+' монет</div></div>';
 var b=document.createElement('button');
 if(act){b.textContent='✓';b.className='act';b.disabled=1;}
 else if(own){
@@ -318,12 +326,18 @@ b.onclick=(function(idx){return function(){
 S.active=idx;save();renderG();
 };})(i);
 }else{
+if(c.sale){
+b.textContent=S.coins>=c.p?'🎉 '+fmt(c.p)+'💰':'🔒 '+fmt(c.p);
+b.className='sale';
+}else{
 b.textContent=S.coins>=c.p?fmt(c.p)+'💰':'🔒 '+fmt(c.p);
+}
 b.disabled=S.coins<c.p;
 b.onclick=(function(idx,pr){return function(){
 if(S.coins>=pr){
 S.coins-=pr;S.owned.push(idx);S.active=idx;
 save();renderG();
+toast('🚗 Куплено: '+CARS[idx].n);
 checkAch({obgony:0,sess:0,dist:0,
 owned:S.owned,recBeats:S.recBeats,
 clownCoins:S.clownCoins,
@@ -420,7 +434,7 @@ if(log)log.textContent='+1 🚽';
 
 function adminReset(){
 if(!confirm('Точно сбросить ВСЁ?'))return;
-localStorage.removeItem('obgon12');
+localStorage.removeItem('obgon13');
 location.reload();
 }
 
@@ -428,6 +442,7 @@ function closeAdmin(){
 $('admin').style.display='none';
 }
 
+// === MR BEAN + TEMENTIY ===
 var mrbeanOn=false;
 function showMrBean(){
 if(mrbeanOn)return;
@@ -436,19 +451,26 @@ var el=$('mrbean');
 var txt=$('mrbeanTxt');
 var ava=el.querySelector('.ava');
 var steps=[
-{who:'bean',msg:'Приветики!!!',d:2500},
+{who:'bean',msg:'всем привет!! Новый арбуз!!',d:2500},
 {act:function(){
 skibidiMode=true;
 sizeBoost=true;
-enemies.forEach(function(e){e.skibidi=true;});
+noEnemies=true;
+enemies=[];
 setTimeout(function(){
 skibidiMode=false;
 sizeBoost=false;
-enemies.forEach(function(e){e.skibidi=false;});
+noEnemies=false;
 },4000);
 },d:2500},
-{who:'deep',msg:'Арбуз маленький, так как код игры сломается (',d:4000},
-{who:'bean',msg:'Пока!',d:2500},
+{who:'tementiy',msg:'Мяв!!!',d:2500},
+{act:function(){
+S.coins+=50;
+if(gameOn)coins+=50;
+save();
+toast('+50 💰 от TEMENTIY 🐱');
+},d:800},
+{who:'bean',msg:'Пока!!',d:2000},
 {act:function(){
 el.classList.remove('show');
 S.coins+=200;
@@ -465,8 +487,9 @@ function nextStep(){
 if(idx>=steps.length)return;
 var s=steps[idx++];
 if(s.who){
-ava.textContent=(s.who==='bean')?'😎':'🐉';
-txt.textContent=((s.who==='bean')?'MR BEAN: ':'DEEPSEEK: ')+s.msg;
+if(s.who==='bean'){ava.textContent='😎';txt.textContent='MR BEAN: '+s.msg;}
+else if(s.who==='deep'){ava.textContent='🐉';txt.textContent='DEEPSEEK: '+s.msg;}
+else{ava.textContent='🐱';txt.textContent='TEMENTIY: '+s.msg;}
 }
 if(s.act)s.act();
 setTimeout(nextStep,s.d);
@@ -474,7 +497,7 @@ setTimeout(nextStep,s.d);
 nextStep();
 }
 
-// Секретная сценка MR BEAN (в тёмной локации)
+// Секретная сценка MR BEAN
 function showMrBeanSecret(){
 var el=$('mrbean');
 var txt=$('mrbeanTxt');
@@ -485,7 +508,7 @@ el.classList.add('show');
 setTimeout(function(){
 el.classList.remove('show');
 },3500);
-}var P=null;
+   }var P=null;
 var enemies=[];
 var lines=[];
 var coins=0;
@@ -517,12 +540,12 @@ var offroadPitsPassed=0;
 // Секретная локация
 var secretActive=false;
 var secretTimer=0;
-var secretPhase=0; // 0=вход, 1=ждём MR BEAN, 2=босс, 3=конец
+var secretPhase=0;
 var playerHP=100;
 var boss={};
 var bossHitCount=0;
 var bossTimer=0;
-var bossZone={x:0,y:0,r:0,active:false,hitTime:0};
+var bossZone={x:0,y:0,r:0,active:false,hitTime:0,hit:false};
 var crystals=[];
 var secretDist=0;
 var hitFlash=0;
@@ -593,8 +616,7 @@ var rw=W*0.75;
 var rx=(W-rw)/2;
 var x=rx+30+Math.random()*(rw-60);
 var r=25+Math.random()*15;
-// Фиолетовая яма после 1000 м
-var purple=(dist>=1000)&&Math.random()<0.4;
+var purple=(dist>=1000)&&Math.random()<0.08;
 pits.push({x:x,y:y!==undefined?y:-150,r:r,passed:false,purple:purple});
 }
 
@@ -614,7 +636,11 @@ c:cs[Math.floor(Math.random()*cs.length)],
 s:2+Math.random()*1.5,
 pass:0,
 t:ts[Math.floor(Math.random()*ts.length)],
-skibidi:false
+skibidi:false,
+lane:l,
+targetLane:l,
+turnTimer:0,
+canTurn:false
 });
 }
 
@@ -659,9 +685,32 @@ if(lines[i].y>H+40)lines[i].y=-40;
 }
 bgOff+=7;
 
+// Боты могут поворачивать после 300 м
+var canTurn=dist>=300;
+
 for(i=0;i<enemies.length;i++){
 var e=enemies[i];
 e.y+=e.s;
+
+// Поворот ботов
+if(canTurn&&!e.pass){
+e.turnTimer-=dt;
+if(e.turnTimer<=0){
+e.turnTimer=1+Math.random()*2;
+var newLane=e.lane+(Math.random()<0.5?-1:1);
+if(newLane<0)newLane=1;
+if(newLane>2)newLane=1;
+if(newLane!==e.lane&&Math.random()<0.6){
+e.targetLane=newLane;
+e.lane=newLane;
+}
+}
+// Плавное движение к целевой полосе
+var lw=rw/3;
+var targetX=rx+lw*e.targetLane+lw/2;
+e.x+=(targetX-e.x)*0.03;
+}
+
 if(Math.abs(e.x-P.x)<P.w-6&&Math.abs(e.y-P.y)<P.h-6){
 gameOn=false;crash('overtake');return;
 }
@@ -732,7 +781,6 @@ var dy=P.y-pit.y;
 var d=Math.sqrt(dx*dx+dy*dy);
 if(d<pit.r-5){
 if(pit.purple){
-// Телепорт в секретную локацию
 teleportToSecret();
 return;
 }else{
@@ -779,10 +827,8 @@ bossTimer=0;
 gameMode='secret';
 S.secretFound=true;
 save();
-// Машина в центре
 P.x=W/2;
 P.vx=0;
-// Кристаллы
 crystals=[];
 var rw=W*0.6;
 var rx=(W-rw)/2;
@@ -795,7 +841,6 @@ hue:260+Math.random()*40,
 passed:false
 });
 }
-// HP бар показать
 $('hpBar').style.display='block';
 updateHPBar();
 }
@@ -812,7 +857,6 @@ function updateSecret(dt){
 secretTimer+=dt;
 secretDist+=6;
 
-// Управление
 if(inp.l)P.vx-=0.9;
 if(inp.r)P.vx+=0.9;
 P.vx*=0.85;
@@ -826,7 +870,6 @@ var mx=rx+rw-P.w/2;
 if(P.x<mn){P.x=mn;P.vx=0;}
 if(P.x>mx){P.x=mx;P.vx=0;}
 
-// Кристаллы скроллятся
 for(var i=0;i<crystals.length;i++){
 crystals[i].y+=6;
 if(crystals[i].y>H+200){
@@ -835,12 +878,9 @@ crystals[i].y=-200;
 }
 bgOff+=6;
 
-// Вспышка урона
 if(hitFlash>0)hitFlash-=dt*3;
 
-// Фазы
 if(secretPhase===0){
-// Ждём 2 сек, потом MR BEAN
 if(secretTimer>=2){
 secretPhase=1;
 secretTimer=0;
@@ -848,33 +888,22 @@ showMrBeanSecret();
 }
 }
 else if(secretPhase===1){
-// После MR BEAN (3.5 сек) появляется босс
 if(secretTimer>=3.5){
 secretPhase=2;
 secretTimer=0;
 bossTimer=0;
 bossHitCount=0;
-// Инициализация босса
-boss={
-x:W/2,
-y:H*0.3,
-size:80,
-eyeTime:0
-};
-// Первая атака
+boss={x:W/2,y:H*0.3,size:80,eyeTime:0};
 scheduleBossAttack();
 }
 }
 else if(secretPhase===2){
-// Босс атакует
 bossTimer+=dt;
 boss.eyeTime+=dt*3;
 
-// Зона удара — активна?
 if(bossZone.active){
 bossZone.hitTime+=dt;
-if(bossZone.hitTime>=0.7 && !bossZone.hit){
-// Удар!
+if(bossZone.hitTime>=0.7&&!bossZone.hit){
 bossZone.hit=true;
 var dx=P.x-bossZone.x;
 var dy=P.y-bossZone.y;
@@ -894,16 +923,13 @@ return;
 }
 }
 if(bossZone.hitTime>=1.0){
-// Удар закончился
 bossZone.active=false;
 bossHitCount++;
 if(bossHitCount>=4){
-// Босс ушёл
 secretPhase=3;
 secretTimer=0;
 setTimeout(function(){exitSecret();},800);
 }else{
-// Следующая атака через 1 сек
 setTimeout(function(){
 if(secretPhase===2)scheduleBossAttack();
 },1000);
@@ -912,13 +938,11 @@ if(secretPhase===2)scheduleBossAttack();
 }
 }
 else if(secretPhase===3){
-// Выход из локации
 if(secretTimer>=0.5){
 exitSecret();
 }
 }
 
-// HUD
 $('coins').textContent=fmt(S.coins+coins);
 $('mult').textContent='x'+CARS[S.active].m;
 $('spd').textContent=Math.floor(secretDist/50);
@@ -935,10 +959,8 @@ secretFound:S.secretFound,bossBeaten:S.bossBeaten});
 }
 
 function scheduleBossAttack(){
-// Случайная зона — большая, но есть куда спрятаться
 var rw=W*0.7;
 var rx=(W-rw)/2;
-// Делим на 3 зоны (лево/центр/право) — только 2 из 3 выбираются, чтобы был безопасный угол
 var zones=[rx+rw*0.17,rx+rw*0.5,rx+rw*0.83];
 var safeIdx=Math.floor(Math.random()*3);
 var attackZones=[];
@@ -957,22 +979,17 @@ hitTime:0
 }
 
 function exitSecret(){
-// Вернуться в обычное внедорожье
 gameMode='offroad';
 secretActive=false;
 playerHP=100;
 $('hpBar').style.display='none';
-// Машина снова в центре
 P.x=W/2;
 P.y=H-160;
 P.vx=0;
 offroadSpeed=3;
-// Очищаем ямы (чтобы не застрять)
 pits=[];
 for(var i=0;i<5;i++)spawnPit(-200-i*180);
-// Сброс атак босса
 bossZone={active:false};
-// Награда
 S.coins+=100;
 coins+=100;
 S.bossBeaten=true;
@@ -987,8 +1004,7 @@ secretFound:S.secretFound,bossBeaten:S.bossBeaten});
 
 function showDefeat(){
 $('over').classList.remove('h');
-var over=$('over');
-over.querySelector('h1').textContent='☠️ ПОРАЖЕНИЕ';
+$('over').querySelector('h1').textContent='☠️ ПОРАЖЕНИЕ';
 $('fc').textContent=fmt(coins);
 $('fo').textContent='BOSS';
 $('fd').textContent=Math.floor(dist);
@@ -1031,7 +1047,7 @@ $('hpBar').style.display='none';
 function restartMode(){
 if(gameMode==='overtake')start();
 else startOffroad();
-   }function mix(a,b,k){
+                             }function mix(a,b,k){
 var pa=[parseInt(a.slice(1,3),16),
 parseInt(a.slice(3,5),16),
 parseInt(a.slice(5,7),16)];
@@ -1156,7 +1172,6 @@ for(var i=0;i<pits.length;i++){
 var p=pits[i];
 if(p.y<-50||p.y>H+50)continue;
 if(p.purple){
-// Фиолетовая яма
 var g=ctx.createRadialGradient(p.x,p.y,p.r*0.3,p.x,p.y,p.r*1.5);
 g.addColorStop(0,'rgba(0,0,0,1)');
 g.addColorStop(0.6,'rgba(60,0,100,.85)');
@@ -1169,11 +1184,7 @@ ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);ctx.fill();
 ctx.strokeStyle='rgba(180,80,255,.9)';
 ctx.lineWidth=3;
 ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);ctx.stroke();
-ctx.strokeStyle='rgba(180,80,255,.4)';
-ctx.lineWidth=2;
-ctx.beginPath();ctx.arc(p.x,p.y,p.r*1.2,0,7);ctx.stroke();
 }else{
-// Чёрная яма
 var g2=ctx.createRadialGradient(p.x,p.y,p.r*0.3,p.x,p.y,p.r*1.4);
 g2.addColorStop(0,'rgba(0,0,0,1)');
 g2.addColorStop(0.7,'rgba(0,0,0,.9)');
@@ -1242,23 +1253,18 @@ ctx.strokeRect(-w/2+1,-h/2+1,w-2,h-2);
 ctx.restore();
 }
 
-// === Секретная локация ===
 function drawSecret(){
-// Тёмный фон
 ctx.fillStyle='#050208';
 ctx.fillRect(0,0,W,H);
-// Кристаллы
 for(var i=0;i<crystals.length;i++){
 var cr=crystals[i];
 if(cr.y<-100||cr.y>H+100)continue;
-// Свечение
 var g=ctx.createRadialGradient(cr.x,cr.y,2,cr.x,cr.y,cr.size*2.5);
 g.addColorStop(0,'hsla('+cr.hue+',100%,65%,.8)');
 g.addColorStop(0.5,'hsla('+cr.hue+',100%,55%,.3)');
 g.addColorStop(1,'hsla('+cr.hue+',100%,50%,0)');
 ctx.fillStyle=g;
 ctx.beginPath();ctx.arc(cr.x,cr.y,cr.size*2.5,0,7);ctx.fill();
-// Кристалл (ромб)
 ctx.save();
 ctx.translate(cr.x,cr.y);
 ctx.rotate(Math.PI/4);
@@ -1268,7 +1274,6 @@ ctx.fillStyle='hsla('+cr.hue+',100%,80%,.7)';
 ctx.fillRect(-cr.size/4,-cr.size/2,cr.size/4,cr.size);
 ctx.restore();
 }
-// Земля — тёмная полоса
 var rw=W*0.7;
 var rx=(W-rw)/2;
 ctx.fillStyle='#0a0510';
@@ -1280,9 +1285,7 @@ ctx.beginPath();ctx.moveTo(rx,0);ctx.lineTo(rx,H);ctx.stroke();
 ctx.beginPath();ctx.moveTo(rx+rw,0);ctx.lineTo(rx+rw,H);ctx.stroke();
 ctx.setLineDash([]);
 
-// Фаза 2 — босс
 if(secretPhase===2){
-// Зона удара (предупреждение)
 if(bossZone.active&&!bossZone.hit){
 var zp=bossZone.hitTime/0.7;
 ctx.fillStyle='rgba(255,0,0,'+(0.15+zp*0.35)+')';
@@ -1295,23 +1298,19 @@ ctx.beginPath();
 ctx.ellipse(bossZone.x,bossZone.y,bossZone.r,bossZone.r*0.6,0,0,7);
 ctx.stroke();
 }
-// Зона удара — момент удара (вспышка)
 if(bossZone.hit&&bossZone.active){
 ctx.fillStyle='rgba(255,0,0,.7)';
 ctx.beginPath();
 ctx.ellipse(bossZone.x,bossZone.y,bossZone.r,bossZone.r*0.6,0,0,7);
 ctx.fill();
 }
-// Босс — серый треугольник с красными глазами
 var bx=boss.x;
 var by=boss.y-Math.sin(boss.eyeTime)*8;
 var bs=boss.size;
-// Тень
 ctx.fillStyle='rgba(0,0,0,.6)';
 ctx.beginPath();
 ctx.ellipse(bx+5,by+bs*0.5,bs*0.7,bs*0.25,0,0,7);
 ctx.fill();
-// Треугольник
 ctx.fillStyle='#6a6a6a';
 ctx.beginPath();
 ctx.moveTo(bx,by-bs*0.6);
@@ -1319,7 +1318,6 @@ ctx.lineTo(bx-bs*0.7,by+bs*0.5);
 ctx.lineTo(bx+bs*0.7,by+bs*0.5);
 ctx.closePath();
 ctx.fill();
-// Тёмная сторона
 ctx.fillStyle='#4a4a4a';
 ctx.beginPath();
 ctx.moveTo(bx,by-bs*0.6);
@@ -1327,11 +1325,9 @@ ctx.lineTo(bx+bs*0.7,by+bs*0.5);
 ctx.lineTo(bx+bs*0.2,by+bs*0.5);
 ctx.closePath();
 ctx.fill();
-// Красные глаза
 ctx.fillStyle='#e53935';
 ctx.beginPath();ctx.arc(bx-bs*0.18,by,5,0,7);ctx.fill();
 ctx.beginPath();ctx.arc(bx+bs*0.18,by,5,0,7);ctx.fill();
-// Свечение глаз
 ctx.save();
 ctx.globalCompositeOperation='lighter';
 ctx.fillStyle='rgba(255,50,50,.5)';
@@ -1339,16 +1335,12 @@ ctx.beginPath();ctx.arc(bx-bs*0.18,by,12,0,7);ctx.fill();
 ctx.beginPath();ctx.arc(bx+bs*0.18,by,12,0,7);ctx.fill();
 ctx.restore();
 }
-// Машина игрока
 if(P)drawPickup(P.x,P.y,P.w,P.h,'#8b6f47',null);
 
-// Вспышка урона
 if(hitFlash>0){
 ctx.fillStyle='rgba(255,0,0,'+hitFlash*0.5+')';
 ctx.fillRect(0,0,W,H);
 }
-
-// Подсказка про уклонение
 if(secretPhase===2&&bossZone.active&&!bossZone.hit){
 ctx.fillStyle='rgba(255,255,255,.7)';
 ctx.font='bold 14px sans-serif';
@@ -1468,6 +1460,7 @@ drawF1Car(P.x,P.y,P.w*scale,P.h*scale);
 }else{
 var c=CARS[S.active];
 var carColor=c.c;
+if(c.isRBR)carColor='#1a237e';
 if(rainbowMode)carColor=rainbowColor(0);
 var scale2=sizeBoost?2:1;
 drawCar(P.x,P.y,P.w*scale2,P.h*scale2,carColor,c.ac,0,c.t,true);
@@ -1506,7 +1499,6 @@ if(isNight()){
 ctx.fillStyle='rgba(10,10,40,.35)';
 ctx.fillRect(0,0,W,H);
 }
-// Предупреждение про 1000 м
 if(dist<1000&&dist>800){
 ctx.fillStyle='rgba(180,80,255,.8)';
 ctx.font='bold 13px sans-serif';
@@ -1585,6 +1577,16 @@ ctx.lineTo(-w/2+r,h/2);
 ctx.quadraticCurveTo(-w/2,h/2,-w/2,h/2-r);
 ctx.lineTo(-w/2,-h/2+r+2);
 ctx.quadraticCurveTo(-w/2,-h/2+2,-w/2+r,-h/2+2);
+}else if(type===4){
+ctx.moveTo(-w/2+r,-h/2);
+ctx.lineTo(w/2-r,-h/2);
+ctx.quadraticCurveTo(w/2,-h/2,w/2,-h/2+r);
+ctx.lineTo(w/2,h/2-r-6);
+ctx.quadraticCurveTo(w/2,h/2,w/2-r-2,h/2);
+ctx.lineTo(-w/2+r,h/2);
+ctx.quadraticCurveTo(-w/2,h/2,-w/2,h/2-r);
+ctx.lineTo(-w/2,-h/2+r);
+ctx.quadraticCurveTo(-w/2,-h/2,-w/2+r,-h/2);
 }else{
 ctx.moveTo(-w/2+r,-h/2);
 ctx.lineTo(w/2-r,-h/2);
