@@ -15,9 +15,12 @@ canvas{position:fixed;inset:0;width:100%;height:100%}
 .ped.on{filter:brightness(1.5)}
 #menu,#garage,#over,#ach{position:fixed;inset:0;background:rgba(0,0,0,.94);display:flex;flex-direction:column;justify-content:center;align-items:center;gap:10px;padding:16px;z-index:20;text-align:center}
 #garage,#ach{justify-content:flex-start!important;padding-top:12px!important;overflow:hidden!important}
-#gl,#al{width:100%;max-width:380px;height:70vh;overflow-y:scroll!important;overflow-x:hidden;-webkit-overflow-scrolling:touch!important;touch-action:pan-y!important;padding:6px 4px;flex:0 0 auto;border:1px solid #222;border-radius:10px;background:rgba(0,0,0,.3)}
+#gl,#al{width:100%;max-width:380px;height:65vh;overflow-y:scroll!important;overflow-x:hidden;-webkit-overflow-scrolling:touch!important;touch-action:pan-y!important;padding:6px 4px;flex:0 0 auto;border:1px solid #222;border-radius:10px;background:rgba(0,0,0,.3)}
 #gl::-webkit-scrollbar,#al::-webkit-scrollbar{width:6px}
 #gl::-webkit-scrollbar-thumb,#al::-webkit-scrollbar-thumb{background:#4fc3f7;border-radius:3px}
+.garTabs{display:flex;gap:8px;width:100%;max-width:380px;margin-bottom:6px}
+.garTabs button{padding:8px 12px;font-size:12px;font-weight:bold;background:linear-gradient(180deg,#444,#222);color:#ccc;border:2px solid #333;border-radius:8px;width:100%}
+.garTabs button.act{background:linear-gradient(180deg,#4fc3f7,#0288d1);color:#fff;border-color:#4fc3f7}
 .h{display:none!important}
 h1{font-size:22px;color:#fc0}h2{font-size:16px;color:#4fc3f7}p{font-size:12px;color:#ccc}
 button{padding:12px 20px;font-size:14px;font-weight:bold;background:linear-gradient(180deg,#4fc3f7,#0288d1);color:#fff;border:none;border-radius:10px;width:100%;max-width:280px}
@@ -84,6 +87,10 @@ button.sale{background:linear-gradient(90deg,#ff0000,#ff00ff,#00ffff,#ffff00,#ff
 <div id="garage" class="h">
 <h2>🔧 ГАРАЖ — листай ↓</h2>
 <p>💰 <span id="gc">0</span></p>
+<div class="garTabs">
+<button id="tabSport" class="act" onclick="switchGarTab('sport')">🏎️ Спорт-кары</button>
+<button id="tabOff" onclick="switchGarTab('off')">🚙 Внедорожья</button>
+</div>
 <div id="gl"></div>
 <button class="bk" onclick="showMenu()">← Назад</button>
 </div>
@@ -145,10 +152,18 @@ var CARS=[
 {n:"🏁 Red Bull F1",m:200,p:1000000,c:'#1a237e',ac:'#ffd600',t:2,isRBR:true,sale:true}
 ];
 
-var F1={n:"Red Bull F1",m:31,p:0,
-c:'#1a237e',ac:'#ffd600',t:2,isF1:true};
+// ВНЕДОРОЖЬЯ — отдельный магазин, меняют вид пикапа
+var OFFROADS=[
+{id:'pickup1',n:"Пикап",p:0,c:'#8b6f47',style:0},
+{id:'jeep',n:"Джип Wrangler",p:3000,c:'#2e7d32',style:1},
+{id:'landrover',n:"Land Rover",p:10000,c:'#455a64',style:1},
+{id:'toyota',n:"Toyota Hilux",p:25000,c:'#d32f2f',style:2},
+{id:'hummer',n:"Hummer H2",p:60000,c:'#4e342e',style:2},
+{id:'tank',n:"Внедорожник Танк",p:200000,c:'#33691e',style:3}
+];
 
-var ACHS=[
+var F1={n:"Red Bull F1",m:31,p:0,
+c:'#1a237e',ac:'#ffd600',t:2,isF1:true};var ACHS=[
 {id:'f1',n:"🎯 Первый обгон",d:"Обгони 1 машину",r:10,
 chk:function(s){return s.obgony>=1}},
 {id:'f10',n:"🚗 Разгон",d:"Обгони 10 машин",r:30,
@@ -184,14 +199,16 @@ if(CARS[s.owned[i]].t===2)return true;return false}},
 chk:function(s){return s.owned.indexOf(16)>=0}},
 {id:'f1ach',n:"🏁 Ф1-пилот",d:"Прокатись на болиде (админ)",r:300,
 chk:function(s){return s.f1Used||false}},
+{id:'jeep',n:"🚙 Джип",d:"Купи джип Wrangler",r:200,
+chk:function(s){return (s.ownedOff||[0]).indexOf(1)>=0}},
+{id:'tank',n:"🎯 Танк",d:"Купи внедорожник Танк",r:1000,
+chk:function(s){return (s.ownedOff||[0]).indexOf(5)>=0}},
 {id:'offr',n:"🚙 Внедорожник",d:"Проедь 500 м внедорожья",r:100,
 chk:function(s){return (s.offroadDist||0)>=500}},
 {id:'secret',n:"💎 Тайна кристаллов",d:"Найди секретную локацию",r:500,
 chk:function(s){return (s.secretFound||false)}},
 {id:'boss',n:"👁️ Победитель босса",d:"Проживи все 4 удара босса",r:1000,
 chk:function(s){return (s.bossBeaten||false)}},
-{id:'d5000',n:"🌍 Легенда",d:"Проедь 5000 м",r:200,
-chk:function(s){return s.dist>=5000}},
 {id:'r1',n:"🥇 Рекордсмен",d:"Побей рекорд 5 раз",r:150,
 chk:function(s){return s.recBeats>=5}}
 ];
@@ -199,15 +216,16 @@ chk:function(s){return s.recBeats>=5}}
 var S={coins:0,owned:[0],active:0,best:0,
 done:[],recBeats:0,clownCoins:0,toiletCoins:0,
 beanDone:false,offroadBest:0,offroadDist:0,f1Used:false,
-secretFound:false,bossBeaten:false};
+secretFound:false,bossBeaten:false,
+ownedOff:[0],activeOff:0};
 
 try{
-var d=JSON.parse(localStorage.getItem('obgon20')||'{}');
+var d=JSON.parse(localStorage.getItem('obgon21')||'{}');
 if(d.S)for(var k in d.S)S[k]=d.S[k];
 }catch(e){}
 
 function save(){
-localStorage.setItem('obgon20',JSON.stringify({S:S}));
+localStorage.setItem('obgon21',JSON.stringify({S:S}));
 }
 setInterval(save,5000);
 
@@ -256,7 +274,7 @@ toast('🏆 '+a.n+'\n+'+a.r+'💰');
 }
 if(nd)save();
 return nd;
-}function showMenu(){
+   }function showMenu(){
 $('menu').classList.remove('h');
 $('garage').classList.add('h');
 $('over').classList.add('h');
@@ -271,6 +289,14 @@ gameOn=false;
 gameMode='overtake';
 f1Mode=false;
 save();
+}
+
+var garTab='sport';
+function switchGarTab(t){
+garTab=t;
+$('tabSport').classList.toggle('act',t==='sport');
+$('tabOff').classList.toggle('act',t==='off');
+renderG();
 }
 
 function showGarage(){
@@ -307,6 +333,14 @@ function renderG(){
 var g=$('gl');
 g.innerHTML='';
 $('gc').textContent=fmt(S.coins);
+if(garTab==='sport'){
+renderSport(g);
+}else{
+renderOff(g);
+}
+}
+
+function renderSport(g){
 for(var i=0;i<CARS.length;i++){
 var c=CARS[i];
 var own=S.owned.indexOf(i)>=0;
@@ -343,7 +377,8 @@ owned:S.owned,recBeats:S.recBeats,
 clownCoins:S.clownCoins,
 toiletCoins:S.toiletCoins,
 f1Used:S.f1Used,offroadDist:S.offroadDist,
-secretFound:S.secretFound,bossBeaten:S.bossBeaten});
+secretFound:S.secretFound,bossBeaten:S.bossBeaten,
+ownedOff:S.ownedOff});
 }
 };})(i,c.p);
 }
@@ -351,7 +386,44 @@ div.appendChild(b);g.appendChild(div);
 }
 }
 
-function openAdmin(){
+function renderOff(g){
+for(var i=0;i<OFFROADS.length;i++){
+var c=OFFROADS[i];
+var own=S.ownedOff.indexOf(i)>=0;
+var act=S.activeOff===i;
+var div=document.createElement('div');
+div.className='cc'+(own?' on':'')+(act?' act':'');
+var nameHtml='<div class="n" style="color:'+c.c+'">'+c.n+'</div>';
+div.innerHTML='<div class="i">'+nameHtml+
+'<div class="d">🚙 Внедорожник</div></div>';
+var b=document.createElement('button');
+if(act){b.textContent='✓';b.className='act';b.disabled=1;}
+else if(own){
+b.textContent='Выбрать';b.className='on';
+b.onclick=(function(idx){return function(){
+S.activeOff=idx;save();renderG();
+};})(i);
+}else{
+b.textContent=S.coins>=c.p?fmt(c.p)+'💰':'🔒 '+fmt(c.p);
+b.disabled=S.coins<c.p;
+b.onclick=(function(idx,pr){return function(){
+if(S.coins>=pr){
+S.coins-=pr;S.ownedOff.push(idx);S.activeOff=idx;
+save();renderG();
+toast('🚙 Куплено: '+OFFROADS[idx].n);
+checkAch({obgony:0,sess:0,dist:0,
+owned:S.owned,recBeats:S.recBeats,
+clownCoins:S.clownCoins,
+toiletCoins:S.toiletCoins,
+f1Used:S.f1Used,offroadDist:S.offroadDist,
+secretFound:S.secretFound,bossBeaten:S.bossBeaten,
+ownedOff:S.ownedOff});
+}
+};})(i,c.p);
+}
+div.appendChild(b);g.appendChild(div);
+}
+   }function openAdmin(){
 $('adminPass').value='';
 $('adminMsg').textContent='';
 $('admin').style.display='flex';
@@ -405,6 +477,8 @@ if(log)log.textContent='+'+n+' 💰 выдано';
 function adminUnlockAll(){
 S.owned=[];
 for(var i=0;i<CARS.length;i++)S.owned.push(i);
+S.ownedOff=[];
+for(var j=0;j<OFFROADS.length;j++)S.ownedOff.push(j);
 save();
 var log=$('adminLog');
 if(log)log.textContent='Все машины открыты!';
@@ -434,7 +508,7 @@ if(log)log.textContent='+1 🚽';
 
 function adminReset(){
 if(!confirm('Точно сбросить ВСЁ?'))return;
-localStorage.removeItem('obgon20');
+localStorage.removeItem('obgon21');
 location.reload();
 }
 
@@ -506,7 +580,7 @@ el.classList.add('show');
 setTimeout(function(){
 el.classList.remove('show');
 },3500);
-   }var P=null;
+}var P=null;
 var enemies=[];
 var lines=[];
 var coins=0;
@@ -607,7 +681,6 @@ for(var i=0;i<10;i++)lines.push({y:i*70-70});
 for(var j=0;j<5;j++)spawnPit(-200-j*180);
 }
 
-// Ямы: фиолетовые чаще (8% → 20%)
 function spawnPit(y){
 var rw=W*0.75;
 var rx=(W-rw)/2;
@@ -617,15 +690,12 @@ var purple=(dist>=1000)&&Math.random()<0.2;
 pits.push({x:x,y:y!==undefined?y:-150,r:r,passed:false,purple:purple});
 }
 
-// ОБЫЧНЫЙ БОТ — едет сверху вниз, может поворачивать
-// Спавнится ТОЛЬКО сверху за экраном, РОВНО ПО ЦЕНТРУ правой полосы
 function spawnNormalBot(y){
 if(noEnemies)return;
 var rw=W*0.65;
 var rx=(W-rw)/2;
 var l=2;
 var laneW=rw/3;
-// РОВНО ПО ЦЕНТРУ правой полосы
 var x=rx+laneW*l+laneW*0.5;
 var cs=['#e53935','#43a047','#1e88e5',
 '#fb8c00','#8e24aa','#00acc1','#d81b60'];
@@ -638,25 +708,19 @@ s:2+Math.random()*1.5,
 pass:0,
 t:ts[Math.floor(Math.random()*ts.length)],
 skibidi:false,
-lane:l,
-targetLane:l,
+lane:l,targetLane:l,
 turnTimer:1+Math.random()*2,
-warningTimer:0,
-warningActive:false,
-turnCooldown:0,
+warningTimer:0,warningActive:false,turnCooldown:0,
 fromAhead:false
 });
 }
 
-// БОТ "В ЛОБ" — спавнится прямо перед игроком в левой/центральной полосе
-// РОВНО ПО ЦЕНТРУ полосы. НЕ ПОВОРАЧИВАЕТ.
 function spawnAheadBot(){
 if(noEnemies)return;
 var rw=W*0.65;
 var rx=(W-rw)/2;
 var l=Math.random()<0.5?0:1;
 var laneW=rw/3;
-// РОВНО ПО ЦЕНТРУ полосы
 var x=rx+laneW*l+laneW*0.5;
 var cs=['#e53935','#43a047','#1e88e5',
 '#fb8c00','#8e24aa','#00acc1','#d81b60'];
@@ -670,12 +734,9 @@ s:2+Math.random()*1.5,
 pass:0,
 t:ts[Math.floor(Math.random()*ts.length)],
 skibidi:false,
-lane:l,
-targetLane:l,
+lane:l,targetLane:l,
 turnTimer:99,
-warningTimer:0,
-warningActive:false,
-turnCooldown:99,
+warningTimer:0,warningActive:false,turnCooldown:99,
 fromAhead:true
 });
 }
@@ -698,9 +759,7 @@ rainbowHue=(rainbowHue+dt*200)%360;
 if(gameMode==='overtake')updateOvertake(dt);
 else if(gameMode==='offroad')updateOffroad(dt);
 else if(gameMode==='secret')updateSecret(dt);
-}
-
-function updateOvertake(dt){
+   }function updateOvertake(dt){
 if(inp.l)P.vx-=0.8;
 if(inp.r)P.vx+=0.8;
 P.vx*=0.85;
@@ -737,8 +796,7 @@ e.turnTimer=Math.max(e.turnTimer,0.5);
 }
 
 if(e.turnTimer<=0&&e.turnCooldown<=0&&!playerNear){
-// Обычные боты поворачивают только в пределах ПРАВОЙ+ЦЕНТРАЛЬНОЙ
-var newLane=1+Math.floor(Math.random()*2); // 1 или 2 (не левая)
+var newLane=1+Math.floor(Math.random()*2);
 if(newLane!==e.lane){
 e.targetLane=newLane;
 e.warningActive=true;
@@ -757,7 +815,6 @@ e.turnCooldown=1.5;
 }
 
 var lw=rw/3;
-// Едет строго по центру полосы
 var targetX=rx+lw*e.targetLane+lw*0.5;
 e.x+=(targetX-e.x)*0.06;
 }
@@ -778,7 +835,6 @@ floats.push({t:'+'+g,x:e.x,y:e.y,l:1});
 
 enemies=enemies.filter(function(e){return e.y<H+200;});
 
-// Спавн
 if(!noEnemies){
 if(enemies.length<5&&Math.random()<0.02)spawnNormalBot();
 if(dist>=100&&Math.random()<0.015)spawnAheadBot();
@@ -798,11 +854,10 @@ checkAch({obgony:obgony,sess:sess,dist:dist,
 owned:S.owned,recBeats:S.recBeats,
 clownCoins:S.clownCoins,toiletCoins:S.toiletCoins,
 f1Used:S.f1Used,offroadDist:S.offroadDist,
-secretFound:S.secretFound,bossBeaten:S.bossBeaten});
+secretFound:S.secretFound,bossBeaten:S.bossBeaten,
+ownedOff:S.ownedOff});
 }
-}
-
-function updateOffroad(dt){
+}function updateOffroad(dt){
 if(inp.l)P.vx-=0.9;
 if(inp.r)P.vx+=0.9;
 P.vx*=0.85;
@@ -869,7 +924,8 @@ checkAch({obgony:0,sess:sess,dist:dist,
 owned:S.owned,recBeats:S.recBeats,
 clownCoins:S.clownCoins,toiletCoins:S.toiletCoins,
 f1Used:S.f1Used,offroadDist:S.offroadDist,
-secretFound:S.secretFound,bossBeaten:S.bossBeaten});
+secretFound:S.secretFound,bossBeaten:S.bossBeaten,
+ownedOff:S.ownedOff});
 }
 }
 
@@ -907,9 +963,7 @@ $('hpText').textContent=playerHP+' / 100';
 if(playerHP<=50)$('hpFill').style.background='linear-gradient(90deg,#ff9800,#ffc107)';
 if(playerHP<=0)$('hpFill').style.background='#e53935';
 if(playerHP>50)$('hpFill').style.background='linear-gradient(90deg,#4caf50,#8bc34a)';
-}
-
-function updateSecret(dt){
+}function updateSecret(dt){
 secretTimer+=dt;
 secretDist+=6;
 
@@ -1010,7 +1064,8 @@ checkAch({obgony:0,sess:sess,dist:dist,
 owned:S.owned,recBeats:S.recBeats,
 clownCoins:S.clownCoins,toiletCoins:S.toiletCoins,
 f1Used:S.f1Used,offroadDist:S.offroadDist,
-secretFound:S.secretFound,bossBeaten:S.bossBeaten});
+secretFound:S.secretFound,bossBeaten:S.bossBeaten,
+ownedOff:S.ownedOff});
 }
 }
 
@@ -1055,7 +1110,8 @@ checkAch({obgony:0,sess:sess,dist:dist,
 owned:S.owned,recBeats:S.recBeats,
 clownCoins:S.clownCoins,toiletCoins:S.toiletCoins,
 f1Used:S.f1Used,offroadDist:S.offroadDist,
-secretFound:S.secretFound,bossBeaten:S.bossBeaten});
+secretFound:S.secretFound,bossBeaten:S.bossBeaten,
+ownedOff:S.ownedOff});
 }
 
 function showDefeat(){
@@ -1087,7 +1143,8 @@ checkAch({obgony:obgony,sess:sess,dist:dist,
 owned:S.owned,recBeats:S.recBeats,
 clownCoins:S.clownCoins,toiletCoins:S.toiletCoins,
 f1Used:S.f1Used,offroadDist:S.offroadDist,
-secretFound:S.secretFound,bossBeaten:S.bossBeaten});
+secretFound:S.secretFound,bossBeaten:S.bossBeaten,
+ownedOff:S.ownedOff});
 $('over').classList.remove('h');
 $('over').querySelector('h1').textContent='💥 АВАРИЯ';
 $('fc').textContent=fmt(coins);
@@ -1221,9 +1278,7 @@ ctx.lineWidth=3;
 ctx.beginPath();ctx.moveTo(rx+2,0);ctx.lineTo(rx+2,H);ctx.stroke();
 ctx.beginPath();ctx.moveTo(rx+rw-2,0);ctx.lineTo(rx+rw-2,H);ctx.stroke();
 ctx.setLineDash([]);
-}
-
-function drawPits(){
+   }function drawPits(){
 for(var i=0;i<pits.length;i++){
 var p=pits[i];
 if(p.y<-50||p.y>H+50)continue;
@@ -1254,59 +1309,6 @@ ctx.lineWidth=3;
 ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);ctx.stroke();
 }
 }
-}
-
-function drawPickup(x,y,w,h,color,accent){
-ctx.save();
-ctx.translate(x,y);
-ctx.fillStyle='rgba(0,0,0,.5)';
-ctx.beginPath();ctx.ellipse(3,5,w*0.7,h*0.55,0,0,7);ctx.fill();
-var r=6;
-ctx.beginPath();
-ctx.moveTo(-w/2+r,-h/2);ctx.lineTo(w/2-r,-h/2);
-ctx.quadraticCurveTo(w/2,-h/2,w/2,-h/2+r);
-ctx.lineTo(w/2,h/2-r);
-ctx.quadraticCurveTo(w/2,h/2,w/2-r,h/2);
-ctx.lineTo(-w/2+r,h/2);
-ctx.quadraticCurveTo(-w/2,h/2,-w/2,h/2-r);
-ctx.lineTo(-w/2,-h/2+r);
-ctx.quadraticCurveTo(-w/2,-h/2,-w/2+r,-h/2);
-ctx.closePath();
-var bg=ctx.createLinearGradient(-w/2,0,w/2,0);
-bg.addColorStop(0,'#3a5a2a');
-bg.addColorStop(0.15,color);
-bg.addColorStop(0.35,'#a8d878');
-bg.addColorStop(0.5,color);
-bg.addColorStop(0.7,'#2a3a1a');
-bg.addColorStop(0.85,color);
-bg.addColorStop(1,'#3a4a2a');
-ctx.fillStyle=bg;ctx.fill();
-ctx.fillStyle='rgba(15,20,30,.95)';
-ctx.beginPath();
-ctx.moveTo(-w/2+6,h*0.1);
-ctx.lineTo(w/2-6,h*0.1);
-ctx.lineTo(w/2-8,h*0.32);
-ctx.lineTo(-w/2+8,h*0.32);
-ctx.closePath();ctx.fill();
-ctx.fillStyle=color;
-ctx.fillRect(-w/2+6,-h/2+8,w-12,h*0.35);
-ctx.fillStyle='rgba(0,0,0,.15)';
-ctx.fillRect(-w/2+4,h*0.35,w-8,h*0.55);
-ctx.fillStyle='#fff9c4';
-ctx.beginPath();ctx.ellipse(-w/2+7,-h/2+3,5,3,0,0,7);ctx.fill();
-ctx.beginPath();ctx.ellipse(w/2-7,-h/2+3,5,3,0,0,7);ctx.fill();
-ctx.fillStyle='#c62828';
-ctx.fillRect(-w/2+4,h/2-4,7,4);
-ctx.fillRect(w/2-11,h/2-4,7,4);
-ctx.fillStyle='#0a0a0a';
-ctx.fillRect(-w/2-4,-h/2+14,7,22);
-ctx.fillRect(w/2-3,-h/2+14,7,22);
-ctx.fillRect(-w/2-4,h/2-30,7,22);
-ctx.fillRect(w/2-3,h/2-30,7,22);
-ctx.strokeStyle='rgba(255,255,255,.2)';
-ctx.lineWidth=1;
-ctx.strokeRect(-w/2+1,-h/2+1,w-2,h-2);
-ctx.restore();
 }
 
 function drawSecret(){
@@ -1391,7 +1393,7 @@ ctx.beginPath();ctx.arc(bx-bs*0.18,by,12,0,7);ctx.fill();
 ctx.beginPath();ctx.arc(bx+bs*0.18,by,12,0,7);ctx.fill();
 ctx.restore();
 }
-if(P)drawPickup(P.x,P.y,P.w,P.h,'#8b6f47',null);
+if(P)drawPickup(P.x,P.y,P.w,P.h);
 
 if(hitFlash>0){
 ctx.fillStyle='rgba(255,0,0,'+hitFlash*0.5+')';
@@ -1403,35 +1405,156 @@ ctx.font='bold 14px sans-serif';
 ctx.textAlign='center';
 ctx.fillText('⚠️ УКЛОНЯЙСЯ!',W/2,70);
 }
+            }function drawPickup(x,y,w,h){
+var off=OFFROADS[S.activeOff||0];
+var color=off.c;
+var style=off.style||0;
+ctx.save();
+ctx.translate(x,y);
+ctx.fillStyle='rgba(0,0,0,.5)';
+ctx.beginPath();ctx.ellipse(3,5,w*0.7,h*0.55,0,0,7);ctx.fill();
+
+// Корпус
+var r=6;
+ctx.beginPath();
+ctx.moveTo(-w/2+r,-h/2);ctx.lineTo(w/2-r,-h/2);
+ctx.quadraticCurveTo(w/2,-h/2,w/2,-h/2+r);
+ctx.lineTo(w/2,h/2-r);
+ctx.quadraticCurveTo(w/2,h/2,w/2-r,h/2);
+ctx.lineTo(-w/2+r,h/2);
+ctx.quadraticCurveTo(-w/2,h/2,-w/2,h/2-r);
+ctx.lineTo(-w/2,-h/2+r);
+ctx.quadraticCurveTo(-w/2,-h/2,-w/2+r,-h/2);
+ctx.closePath();
+var bg=ctx.createLinearGradient(-w/2,0,w/2,0);
+bg.addColorStop(0,'#1a1a1a');
+bg.addColorStop(0.2,color);
+bg.addColorStop(0.4,'#fff');
+bg.addColorStop(0.6,color);
+bg.addColorStop(0.8,'#2a2a2a');
+bg.addColorStop(1,color);
+ctx.fillStyle=bg;ctx.fill();
+
+// Стиль 0 — обычный пикап
+if(style===0){
+ctx.fillStyle='rgba(15,20,30,.95)';
+ctx.beginPath();
+ctx.moveTo(-w/2+6,h*0.1);
+ctx.lineTo(w/2-6,h*0.1);
+ctx.lineTo(w/2-8,h*0.32);
+ctx.lineTo(-w/2+8,h*0.32);
+ctx.closePath();ctx.fill();
+ctx.fillStyle=color;
+ctx.fillRect(-w/2+6,-h/2+8,w-12,h*0.35);
+ctx.fillStyle='rgba(0,0,0,.15)';
+ctx.fillRect(-w/2+4,h*0.35,w-8,h*0.55);
 }
 
-// ★★★ УЛУЧШЕННЫЙ БОЛИД F1 RED BULL ★★★
+// Стиль 1 — джип (круглые фары, решётка)
+if(style===1){
+ctx.fillStyle='rgba(15,20,30,.95)';
+ctx.fillRect(-w/2+6,-h/2+8,w-12,h*0.4);
+// Круглые фары
+ctx.fillStyle='#fff9c4';
+ctx.beginPath();ctx.arc(-w/2+10,-h/2+3,4,0,7);ctx.fill();
+ctx.beginPath();ctx.arc(w/2-10,-h/2+3,4,0,7);ctx.fill();
+// Решётка
+ctx.fillStyle='#111';
+for(var i=0;i<7;i++){
+ctx.fillRect(-w*0.25+i*4,-h/2+8,2,4);
+}
+}
+
+// Стиль 2 — большой внедорожник (багажник на крыше)
+if(style===2){
+ctx.fillStyle='rgba(15,20,30,.95)';
+ctx.fillRect(-w/2+5,-h/2+8,w-10,h*0.42);
+// Багажник на крыше
+ctx.fillStyle='#333';
+ctx.fillRect(-w/2+5,-h/2+2,w-10,3);
+ctx.fillRect(-w/2+5,-h/2+2,2,8);
+ctx.fillRect(w/2-7,-h/2+2,2,8);
+// Большие фары
+ctx.fillStyle='#fff9c4';
+ctx.fillRect(-w/2+7,-h/2+3,6,4);
+ctx.fillRect(w/2-13,-h/2+3,6,4);
+}
+
+// Стиль 3 — танк (гусеницы, орудие)
+if(style===3){
+// Танковый корпус
+ctx.fillStyle=color;
+ctx.fillRect(-w/2+5,-h/2+6,w-10,h*0.5);
+// Башня
+ctx.fillStyle='#2a3a1a';
+ctx.beginPath();
+ctx.ellipse(0,0,w*0.3,h*0.15,0,0,7);
+ctx.fill();
+// Орудие
+ctx.fillStyle='#111';
+ctx.fillRect(-2,-h*0.35,4,h*0.2);
+// Гусеницы по бокам
+ctx.fillStyle='#1a1a1a';
+ctx.fillRect(-w/2-2,-h/2+5,5,h-10);
+ctx.fillRect(w/2-3,-h/2+5,5,h-10);
+// Траки
+ctx.fillStyle='#333';
+for(var j=0;j<8;j++){
+ctx.fillRect(-w/2-2,-h/2+8+j*9,5,2);
+ctx.fillRect(w/2-3,-h/2+8+j*9,5,2);
+}
+}
+
+// Фары
+ctx.fillStyle='#fff9c4';
+ctx.beginPath();ctx.ellipse(-w/2+7,-h/2+3,5,3,0,0,7);ctx.fill();
+ctx.beginPath();ctx.ellipse(w/2-7,-h/2+3,5,3,0,0,7);ctx.fill();
+if(isNight()){
+ctx.save();
+ctx.globalCompositeOperation='lighter';
+[-w/2+7,w/2-7].forEach(function(hx){
+var g=ctx.createRadialGradient(hx,-h/2+3,2,hx,-h/2+3,50);
+g.addColorStop(0,'rgba(255,240,180,.5)');
+g.addColorStop(1,'rgba(255,240,180,0)');
+ctx.fillStyle=g;
+ctx.beginPath();ctx.arc(hx,-h/2+3,50,0,7);ctx.fill();
+});
+ctx.restore();
+}
+// Стопаки
+ctx.fillStyle='#c62828';
+ctx.fillRect(-w/2+4,h/2-4,7,4);
+ctx.fillRect(w/2-11,h/2-4,7,4);
+// Колёса
+ctx.fillStyle='#0a0a0a';
+ctx.fillRect(-w/2-4,-h/2+14,7,22);
+ctx.fillRect(w/2-3,-h/2+14,7,22);
+ctx.fillRect(-w/2-4,h/2-30,7,22);
+ctx.fillRect(w/2-3,h/2-30,7,22);
+ctx.strokeStyle='rgba(255,255,255,.2)';
+ctx.lineWidth=1;
+ctx.strokeRect(-w/2+1,-h/2+1,w-2,h-2);
+ctx.restore();
+}
+
+// ★ БОЛИД F1 RED BULL ★
 function drawF1Car(x,y,w,h){
-var bw=w*1.4;  // шире — как настоящая F1
+var bw=w*1.4;
 var bh=h*1.0;
 ctx.save();
 ctx.translate(x,y);
-
-// Тень
 ctx.fillStyle='rgba(0,0,0,.55)';
 ctx.beginPath();
 ctx.ellipse(3,5,bw*0.6,bh*0.5,0,0,7);
 ctx.fill();
-
-// === ПЕРЕДНЕЕ КРЫЛО (широкое) ===
+// Переднее крыло
 ctx.fillStyle='#0d1456';
 ctx.fillRect(-bw/2-8,-bh/2-2,bw+16,8);
 ctx.fillStyle='#ffd600';
 ctx.fillRect(-bw/2-8,-bh/2-2,bw+16,3);
 ctx.fillStyle='#e53935';
 ctx.fillRect(-bw/2-8,-bh/2+3,bw+16,3);
-// Красный бык на крыле
-ctx.fillStyle='#e53935';
-ctx.beginPath();
-ctx.arc(-bw/4,-bh/2+4,2,0,7);
-ctx.fill();
-
-// === НОСОВОЙ ОБТЕКАТЕЛЬ (узкий к центру) ===
+// Нос
 ctx.fillStyle='#0d1456';
 ctx.beginPath();
 ctx.moveTo(-bw*0.15,-bh/2+5);
@@ -1440,14 +1563,11 @@ ctx.lineTo(bw*0.1,-bh/4);
 ctx.lineTo(-bw*0.1,-bh/4);
 ctx.closePath();
 ctx.fill();
-// Жёлтая полоса на носу
 ctx.fillStyle='#ffd600';
 ctx.fillRect(-bw*0.15,-bh/2+8,bw*0.3,3);
-// Красный акцент
 ctx.fillStyle='#e53935';
 ctx.fillRect(-bw*0.08,-bh/2+5,bw*0.16,2);
-
-// === КОРПУС (основной монокок) ===
+// Корпус
 ctx.beginPath();
 ctx.moveTo(-bw*0.2,-bh*0.2);
 ctx.lineTo(bw*0.2,-bh*0.2);
@@ -1461,107 +1581,193 @@ bg.addColorStop(0.5,'#3f51b5');
 bg.addColorStop(0.7,'#1a237e');
 bg.addColorStop(1,'#0a0e3a');
 ctx.fillStyle=bg;ctx.fill();
-
-// Жёлтые и красные полосы вдоль корпуса
 ctx.fillStyle='#ffd600';
 ctx.fillRect(-bw*0.05,-bh*0.2,bw*0.1,bh*0.55);
 ctx.fillStyle='#e53935';
 ctx.fillRect(-bw*0.2,-bh*0.15,3,bh*0.45);
 ctx.fillRect(bw*0.2-3,-bh*0.15,3,bh*0.45);
-
-// === КОКПИТ ПИЛОТА ===
-// Обтекатель кокпита
+// Кокпит
 ctx.fillStyle='#0d1456';
 ctx.beginPath();
 ctx.ellipse(0,-bh*0.05,bw*0.13,bh*0.14,0,0,7);
 ctx.fill();
-// Шлем пилота (жёлтый — как у Ферстаппена)
 ctx.fillStyle='#ffd600';
 ctx.beginPath();
 ctx.arc(0,-bh*0.06,bw*0.08,0,7);
 ctx.fill();
-// Визор
 ctx.fillStyle='#111';
 ctx.beginPath();
 ctx.arc(0,-bh*0.08,bw*0.07,Math.PI*1.1,Math.PI*1.9);
 ctx.fill();
-// Красная полоска на шлеме
-ctx.strokeStyle='#e53935';
-ctx.lineWidth=2;
-ctx.beginPath();
-ctx.arc(0,-bh*0.06,bw*0.08,Math.PI*0.2,Math.PI*0.8);
-ctx.stroke();
-
-// === БОРТА (боковые понтоны) ===
+// Борта
 ctx.fillStyle='#0d1456';
 ctx.fillRect(-bw*0.28,-bh*0.15,bw*0.08,bh*0.4);
 ctx.fillRect(bw*0.2,-bh*0.15,bw*0.08,bh*0.4);
-// Воздухозаборники
 ctx.fillStyle='#000';
 ctx.fillRect(-bw*0.28,-bh*0.1,bw*0.08,5);
 ctx.fillRect(bw*0.2,-bh*0.1,bw*0.08,5);
-
-// === ЗАДНЕЕ КРЫЛО (высокое) ===
+// Заднее крыло
 ctx.fillStyle='#0d1456';
 ctx.fillRect(-bw/2-4,bh*0.38,bw+8,10);
 ctx.fillStyle='#ffd600';
 ctx.fillRect(-bw/2-4,bh*0.38,bw+8,3);
 ctx.fillStyle='#e53935';
 ctx.fillRect(-bw/2-4,bh*0.45,bw+8,3);
-// Стойки заднего крыла
 ctx.fillStyle='#333';
 ctx.fillRect(-bw*0.15,bh*0.32,3,8);
 ctx.fillRect(bw*0.15-3,bh*0.32,3,8);
-
-// === ЗАДНИЙ ОГОНЬ (F1 правило) ===
+// Огонь
 ctx.fillStyle='#e53935';
 ctx.beginPath();
 ctx.arc(0,bh*0.4,bw*0.04,0,7);
 ctx.fill();
-
-// === ДИФФУЗОР ===
-ctx.fillStyle='#1a1a1a';
-ctx.fillRect(-bw*0.15,bh*0.42,bw*0.3,5);
-
-// === ВЫХЛОП ===
-ctx.fillStyle='#666';
-ctx.beginPath();
-ctx.ellipse(0,bh*0.36,bw*0.05,3,0,0,7);
-ctx.fill();
-
-// === КОЛЁСА (открытые, 4 штуки) ===
-// Передние (узкие)
+// Колёса
 ctx.fillStyle='#0a0a0a';
 ctx.beginPath();ctx.ellipse(-bw/2-5,-bh*0.25,5,11,0,0,7);ctx.fill();
 ctx.beginPath();ctx.ellipse(bw/2+5,-bh*0.25,5,11,0,0,7);ctx.fill();
-// Задние (широкие — характерно для F1)
 ctx.beginPath();ctx.ellipse(-bw/2-5,bh*0.25,7,14,0,0,7);ctx.fill();
 ctx.beginPath();ctx.ellipse(bw/2+5,bh*0.25,7,14,0,0,7);ctx.fill();
-
-// Диски с протектором
 ctx.fillStyle='#8a8a95';
 ctx.beginPath();ctx.ellipse(-bw/2-5,-bh*0.25,2,5,0,0,7);ctx.fill();
 ctx.beginPath();ctx.ellipse(bw/2+5,-bh*0.25,2,5,0,0,7);ctx.fill();
 ctx.beginPath();ctx.ellipse(-bw/2-5,bh*0.25,3,6.5,0,0,7);ctx.fill();
 ctx.beginPath();ctx.ellipse(bw/2+5,bh*0.25,3,6.5,0,0,7);ctx.fill();
-
-// Красные полоски на шинах (Pirelli)
-ctx.strokeStyle='#e53935';
-ctx.lineWidth=1;
-ctx.beginPath();ctx.ellipse(-bw/2-5,-bh*0.25,3,6,0,0,7);ctx.stroke();
-ctx.beginPath();ctx.ellipse(bw/2+5,-bh*0.25,3,6,0,0,7);ctx.stroke();
-ctx.beginPath();ctx.ellipse(-bw/2-5,bh*0.25,4,8,0,0,7);ctx.stroke();
-ctx.beginPath();ctx.ellipse(bw/2+5,bh*0.25,4,8,0,0,7);ctx.stroke();
-
-// === ОБВОДКА ===
 ctx.strokeStyle='rgba(255,214,0,.4)';
 ctx.lineWidth=1;
 ctx.strokeRect(-bw*0.25,-bh*0.2,bw*0.5,bh*0.55);
+ctx.restore();
+                            }function drawCar(x,y,w,h,color,accent,a,type,isP){
+ctx.save();
+ctx.translate(x,y);
+ctx.rotate(a);
+ctx.fillStyle='rgba(0,0,0,.45)';
+ctx.beginPath();
+ctx.ellipse(3,4,w*0.6,h*0.5,0,0,7);
+ctx.fill();
 
+var r=type===2?4:(type===1?10:8);
+ctx.beginPath();
+if(type===2){
+ctx.moveTo(-w/2+r,-h/2+4);
+ctx.quadraticCurveTo(0,-h/2-2,w/2-r,-h/2+4);
+ctx.lineTo(w/2+2,-h/2+10);ctx.lineTo(w/2+4,h/2-8);
+ctx.quadraticCurveTo(w/2+4,h/2,w/2-4,h/2);
+ctx.lineTo(-w/2+4,h/2);
+ctx.quadraticCurveTo(-w/2-2,h/2,-w/2-2,h/2-8);
+ctx.lineTo(-w/2-4,-h/2+10);
+}else if(type===1){
+ctx.moveTo(-w/2+r,-h/2+2);
+ctx.lineTo(w/2-r,-h/2);
+ctx.quadraticCurveTo(w/2,-h/2,w/2,-h/2+r);
+ctx.lineTo(w/2+2,h/2-r);
+ctx.quadraticCurveTo(w/2+2,h/2,w/2-r,h/2);
+ctx.lineTo(-w/2+r,h/2);
+ctx.quadraticCurveTo(-w/2,h/2,-w/2,h/2-r);
+ctx.lineTo(-w/2,-h/2+r+2);
+ctx.quadraticCurveTo(-w/2,-h/2+2,-w/2+r,-h/2+2);
+}else if(type===4){
+ctx.moveTo(-w/2+r,-h/2);
+ctx.lineTo(w/2-r,-h/2);
+ctx.quadraticCurveTo(w/2,-h/2,w/2,-h/2+r);
+ctx.lineTo(w/2,h/2-r-6);
+ctx.quadraticCurveTo(w/2,h/2,w/2-r-2,h/2);
+ctx.lineTo(-w/2+r,h/2);
+ctx.quadraticCurveTo(-w/2,h/2,-w/2,h/2-r);
+ctx.lineTo(-w/2,-h/2+r);
+ctx.quadraticCurveTo(-w/2,-h/2,-w/2+r,-h/2);
+}else{
+ctx.moveTo(-w/2+r,-h/2);
+ctx.lineTo(w/2-r,-h/2);
+ctx.quadraticCurveTo(w/2,-h/2,w/2,-h/2+r);
+ctx.lineTo(w/2,h/2-r);
+ctx.quadraticCurveTo(w/2,h/2,w/2-r,h/2);
+ctx.lineTo(-w/2+r,h/2);
+ctx.quadraticCurveTo(-w/2,h/2,-w/2,h/2-r);
+ctx.lineTo(-w/2,-h/2+r);
+ctx.quadraticCurveTo(-w/2,-h/2,-w/2+r,-h/2);
+}
+ctx.closePath();
+
+var bg=ctx.createLinearGradient(-w/2,0,w/2,0);
+bg.addColorStop(0,'#5a5a65');
+bg.addColorStop(0.15,color);
+bg.addColorStop(0.35,'#fff');
+bg.addColorStop(0.5,color);
+bg.addColorStop(0.7,'#2a2a35');
+bg.addColorStop(0.85,color);
+bg.addColorStop(1,'#4a4a55');
+ctx.fillStyle=bg;ctx.fill();
+
+if(accent&&!rainbowMode){
+ctx.fillStyle=accent;
+ctx.fillRect(-w*0.15,-h/2,w*0.1,h);
+ctx.fillRect(w*0.05,-h/2,w*0.1,h);
+}
+
+ctx.fillStyle='rgba(15,20,30,.95)';
+ctx.beginPath();
+ctx.moveTo(-w/2+7,-h/2+9);
+ctx.lineTo(w/2-7,-h/2+9);
+ctx.lineTo(w/2-10,-h/2+22);
+ctx.lineTo(-w/2+10,-h/2+22);
+ctx.closePath();ctx.fill();
+
+ctx.fillStyle=color;
+ctx.fillRect(-w/2+7,-h/2+22,w-14,10);
+
+ctx.fillStyle='rgba(15,20,30,.85)';
+ctx.beginPath();
+ctx.moveTo(-w/2+9,h/2-28);
+ctx.lineTo(w/2-9,h/2-28);
+ctx.lineTo(w/2-7,h/2-14);
+ctx.lineTo(-w/2+7,h/2-14);
+ctx.closePath();ctx.fill();
+
+ctx.fillStyle='#fff9c4';
+ctx.beginPath();ctx.ellipse(-w/2+8,-h/2+3,5,3,0,0,7);ctx.fill();
+ctx.beginPath();ctx.ellipse(w/2-8,-h/2+3,5,3,0,0,7);ctx.fill();
+
+ctx.fillStyle='#c62828';
+ctx.fillRect(-w/2+4,h/2-6,7,4);
+ctx.fillRect(w/2-11,h/2-6,7,4);
+
+ctx.fillStyle='#0a0a0a';
+ctx.fillRect(-w/2-3,-h/2+12,6,18);
+ctx.fillRect(w/2-3,-h/2+12,6,18);
+ctx.fillRect(-w/2-3,h/2-22,6,18);
+ctx.fillRect(w/2-3,h/2-22,6,18);
+
+ctx.strokeStyle='rgba(255,255,255,.2)';
+ctx.lineWidth=1;
+ctx.strokeRect(-w/2+1,-h/2+1,w-2,h-2);
 ctx.restore();
 }
 
-function draw(){
+function drawToilet(x,y,w,h){
+ctx.save();
+ctx.translate(x,y);
+ctx.fillStyle='rgba(0,0,0,.45)';
+ctx.beginPath();ctx.ellipse(3,4,w*0.6,h*0.5,0,0,7);ctx.fill();
+ctx.fillStyle='#f0f0f0';
+ctx.fillRect(-w/2,-h/2,w,h*0.35);
+ctx.strokeStyle='#999';ctx.lineWidth=2;
+ctx.strokeRect(-w/2,-h/2,w,h*0.35);
+ctx.beginPath();
+ctx.ellipse(0,h*0.2,w*0.55,h*0.35,0,0,7);
+ctx.fillStyle='#e8e8e8';ctx.fill();
+ctx.strokeStyle='#666';ctx.lineWidth=2;ctx.stroke();
+ctx.fillStyle='#ffcc99';
+ctx.beginPath();ctx.arc(0,-h/2-6,w*0.38,0,7);ctx.fill();
+ctx.fillStyle='#333';
+ctx.beginPath();ctx.arc(0,-h/2-8,w*0.38,Math.PI,0);ctx.fill();
+ctx.fillStyle='#fff';
+ctx.beginPath();ctx.arc(-6,-h/2-6,4,0,7);ctx.fill();
+ctx.beginPath();ctx.arc(6,-h/2-6,4,0,7);ctx.fill();
+ctx.fillStyle='#000';
+ctx.beginPath();ctx.arc(-6,-h/2-6,2,0,7);ctx.fill();
+ctx.beginPath();ctx.arc(6,-h/2-6,2,0,7);ctx.fill();
+ctx.restore();
+   }function draw(){
 if(W<=0||H<=0)return;
 if(gameMode==='overtake')drawOvertake();
 else if(gameMode==='offroad')drawOffroad();
@@ -1671,7 +1877,7 @@ ctx.fillStyle=sky();
 ctx.fillRect(0,0,W,H);
 drawOffroadBg();
 drawPits();
-if(P)drawPickup(P.x,P.y,P.w,P.h,'#8b6f47',null);
+if(P)drawPickup(P.x,P.y,P.w,P.h);
 if(isNight()){
 ctx.fillStyle='rgba(10,10,40,.35)';
 ctx.fillRect(0,0,W,H);
@@ -1699,63 +1905,38 @@ ctx.globalAlpha=1;
 floats=floats.filter(function(f){return f.l>0;});
 }
 
-function drawToilet(x,y,w,h){
-ctx.save();
-ctx.translate(x,y);
-ctx.fillStyle='rgba(0,0,0,.45)';
-ctx.beginPath();ctx.ellipse(3,4,w*0.6,h*0.5,0,0,7);ctx.fill();
-ctx.fillStyle='#f0f0f0';
-ctx.fillRect(-w/2,-h/2,w,h*0.35);
-ctx.strokeStyle='#999';ctx.lineWidth=2;
-ctx.strokeRect(-w/2,-h/2,w,h*0.35);
-ctx.beginPath();
-ctx.ellipse(0,h*0.2,w*0.55,h*0.35,0,0,7);
-ctx.fillStyle='#e8e8e8';ctx.fill();
-ctx.strokeStyle='#666';ctx.lineWidth=2;ctx.stroke();
-ctx.fillStyle='#ffcc99';
-ctx.beginPath();ctx.arc(0,-h/2-6,w*0.38,0,7);ctx.fill();
-ctx.fillStyle='#333';
-ctx.beginPath();ctx.arc(0,-h/2-8,w*0.38,Math.PI,0);ctx.fill();
-ctx.fillStyle='#fff';
-ctx.beginPath();ctx.arc(-6,-h/2-6,4,0,7);ctx.fill();
-ctx.beginPath();ctx.arc(6,-h/2-6,4,0,7);ctx.fill();
-ctx.fillStyle='#000';
-ctx.beginPath();ctx.arc(-6,-h/2-6,2,0,7);ctx.fill();
-ctx.beginPath();ctx.arc(6,-h/2-6,2,0,7);ctx.fill();
-ctx.restore();
+var lt=performance.now();
+function loop(n){
+var dt=Math.min((n-lt)/1000,.05);
+lt=n;
+if(W<=0||H<=0)resize();
+update(dt);
+draw();
+requestAnimationFrame(loop);
 }
 
-function drawCar(x,y,w,h,color,accent,a,type,isP){
-ctx.save();
-ctx.translate(x,y);
-ctx.rotate(a);
-ctx.fillStyle='rgba(0,0,0,.45)';
-ctx.beginPath();
-ctx.ellipse(3,4,w*0.6,h*0.5,0,0,7);
-ctx.fill();
+resize();
+showMenu();
+updateClownHud();
+bind($('bl'),'l');
+bind($('br'),'r');
+bind($('pg'),'gas');
+bind($('pb'),'brk');
+requestAnimationFrame(loop);
 
-var r=type===2?4:(type===1?10:8);
-ctx.beginPath();
-if(type===2){
-ctx.moveTo(-w/2+r,-h/2+4);
-ctx.quadraticCurveTo(0,-h/2-2,w/2-r,-h/2+4);
-ctx.lineTo(w/2+2,-h/2+10);ctx.lineTo(w/2+4,h/2-8);
-ctx.quadraticCurveTo(w/2+4,h/2,w/2-4,h/2);
-ctx.lineTo(-w/2+4,h/2);
-ctx.quadraticCurveTo(-w/2-2,h/2,-w/2-2,h/2-8);
-ctx.lineTo(-w/2-4,-h/2+10);
-}else if(type===1){
-ctx.moveTo(-w/2+r,-h/2+2);
-ctx.lineTo(w/2-r,-h/2);
-ctx.quadraticCurveTo(w/2,-h/2,w/2,-h/2+r);
-ctx.lineTo(w/2+2,h/2-r);
-ctx.quadraticCurveTo(w/2+2,h/2,w/2-r,h/2);
-ctx.lineTo(-w/2+r,h/2);
-ctx.quadraticCurveTo(-w/2,h/2,-w/2,h/2-r);
-ctx.lineTo(-w/2,-h/2+r+2);
-ctx.quadraticCurveTo(-w/2,-h/2+2,-w/2+r,-h/2+2);
-}else if(type===4){
-ctx.moveTo(-w/2+r,-h/2);
-ctx.lineTo(w/2-r,-h/2);
-ctx.quadraticCurveTo(w/2,-h/2,w/2,-h/2+r);
-ctx.lineTo(w/2
+setInterval(function(){
+if(S.beanDone)return;
+if(S.coins<50)return;
+if(Math.random()<0.3){
+S.beanDone=true;
+save();
+showMrBean();
+}
+},10000);
+
+window.addEventListener('resize',resize);
+window.addEventListener('orientationchange',
+function(){setTimeout(resize,200);});
+</script>
+</body>
+</html>
