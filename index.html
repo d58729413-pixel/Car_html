@@ -202,12 +202,12 @@ beanDone:false,offroadBest:0,offroadDist:0,f1Used:false,
 secretFound:false,bossBeaten:false};
 
 try{
-var d=JSON.parse(localStorage.getItem('obgon14')||'{}');
+var d=JSON.parse(localStorage.getItem('obgon15')||'{}');
 if(d.S)for(var k in d.S)S[k]=d.S[k];
 }catch(e){}
 
 function save(){
-localStorage.setItem('obgon14',JSON.stringify({S:S}));
+localStorage.setItem('obgon15',JSON.stringify({S:S}));
 }
 setInterval(save,5000);
 
@@ -434,7 +434,7 @@ if(log)log.textContent='+1 🚽';
 
 function adminReset(){
 if(!confirm('Точно сбросить ВСЁ?'))return;
-localStorage.removeItem('obgon14');
+localStorage.removeItem('obgon15');
 location.reload();
 }
 
@@ -442,7 +442,6 @@ function closeAdmin(){
 $('admin').style.display='none';
 }
 
-// === MR BEAN + TEMENTIY ===
 var mrbeanOn=false;
 function showMrBean(){
 if(mrbeanOn)return;
@@ -497,7 +496,6 @@ setTimeout(nextStep,s.d);
 nextStep();
 }
 
-// Секретная сценка MR BEAN
 function showMrBeanSecret(){
 var el=$('mrbean');
 var txt=$('mrbeanTxt');
@@ -532,12 +530,10 @@ var noEnemies=false;
 var sizeBoost=false;
 var skibidiMode=false;
 
-// Внедорожье
 var pits=[];
 var offroadSpeed=3;
 var offroadPitsPassed=0;
 
-// Секретная локация
 var secretActive=false;
 var secretTimer=0;
 var secretPhase=0;
@@ -625,7 +621,11 @@ if(noEnemies)return;
 var rw=W*0.65;
 var rx=(W-rw)/2;
 var l=Math.floor(Math.random()*3);
-var x=rx+(rw/3)*l+(rw/6);
+// Спавн в случайном месте полосы: центр или сбоку
+var laneW=rw/3;
+var laneX=rx+laneW*l;
+var offset=0.15+Math.random()*0.7;
+var x=laneX+laneW*offset;
 var cs=['#e53935','#43a047','#1e88e5',
 '#fb8c00','#8e24aa','#00acc1','#d81b60'];
 var ts=[0,1,2,4];
@@ -687,14 +687,12 @@ if(lines[i].y>H+40)lines[i].y=-40;
 }
 bgOff+=7;
 
-// Боты могут поворачивать после 300 м
 var canTurn=dist>=300;
 
 for(i=0;i<enemies.length;i++){
 var e=enemies[i];
 e.y+=e.s;
 
-// Поворот ботов с предупреждением
 if(canTurn&&!e.pass){
 var playerNear=Math.abs(e.y-P.y)<180&&Math.abs(e.x-P.x)<150;
 e.turnTimer-=dt;
@@ -1471,7 +1469,6 @@ for(i=0;i<enemies.length;i++){
 var e=enemies[i];
 if(skibidiMode&&e.skibidi)drawToilet(e.x,e.y,e.w,e.h);
 else drawCar(e.x,e.y,e.w,e.h,e.c,null,0,e.t,false);
-// Предупреждение о повороте
 if(e.warningActive){
 var blink=(Math.floor(e.warningTimer*10)%2===0);
 if(blink){
