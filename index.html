@@ -202,12 +202,12 @@ beanDone:false,offroadBest:0,offroadDist:0,f1Used:false,
 secretFound:false,bossBeaten:false};
 
 try{
-var d=JSON.parse(localStorage.getItem('obgon18')||'{}');
+var d=JSON.parse(localStorage.getItem('obgon19')||'{}');
 if(d.S)for(var k in d.S)S[k]=d.S[k];
 }catch(e){}
 
 function save(){
-localStorage.setItem('obgon18',JSON.stringify({S:S}));
+localStorage.setItem('obgon19',JSON.stringify({S:S}));
 }
 setInterval(save,5000);
 
@@ -434,7 +434,7 @@ if(log)log.textContent='+1 🚽';
 
 function adminReset(){
 if(!confirm('Точно сбросить ВСЁ?'))return;
-localStorage.removeItem('obgon18');
+localStorage.removeItem('obgon19');
 location.reload();
 }
 
@@ -587,8 +587,8 @@ vx:0};
 enemies=[];lines=[];
 coins=0;sess=0;dist=0;speed=0;obgony=0;
 for(var i=0;i<12;i++)lines.push({y:i*80-80});
-// ★ Стартовые боты — только в правой полосе (обычные) ★
-for(var j=0;j<4;j++)spawnNormalBot(-250-j*250);
+// ★ УМЕНЬШЕНО: стартовых ботов 4 → 2 ★
+for(var j=0;j<2;j++)spawnNormalBot(-250-j*250);
 lastRec=S.best;
 }
 
@@ -617,13 +617,13 @@ var purple=(dist>=1000)&&Math.random()<0.08;
 pits.push({x:x,y:y!==undefined?y:-150,r:r,passed:false,purple:purple});
 }
 
-// ★★★ ОБЫЧНЫЙ БОТ — едет сверху, может поворачивать ★★★
+// ОБЫЧНЫЙ БОТ — едет сверху, может поворачивать
 // Спавнится ТОЛЬКО в правой полосе (l=2)
 function spawnNormalBot(y){
 if(noEnemies)return;
 var rw=W*0.65;
 var rx=(W-rw)/2;
-var l=2; // только правая полоса
+var l=2;
 var laneW=rw/3;
 var laneX=rx+laneW*l;
 var offset=0.25+Math.random()*0.5;
@@ -649,13 +649,13 @@ fromAhead:false
 });
 }
 
-// ★★★ БОТ "В ЛОБ" — спавнится прямо перед игроком ★★★
-// НЕ ПОВОРАЧИВАЕТ. Спавнится только в левой (0) или центральной (1) полосе
+// БОТ "В ЛОБ" — спавнится прямо перед игроком, не поворачивает
+// Спавнится только в левой (0) или центральной (1) полосе
 function spawnAheadBot(){
 if(noEnemies)return;
 var rw=W*0.65;
 var rx=(W-rw)/2;
-var l=Math.random()<0.5?0:1; // только левая или центральная
+var l=Math.random()<0.5?0:1;
 var laneW=rw/3;
 var laneX=rx+laneW*l;
 var offset=0.3+Math.random()*0.4;
@@ -663,7 +663,6 @@ var x=laneX+laneW*offset;
 var cs=['#e53935','#43a047','#1e88e5',
 '#fb8c00','#8e24aa','#00acc1','#d81b60'];
 var ts=[0,1,2,4];
-// Спавн прямо перед игроком
 var spawnY=P.y-250-Math.random()*50;
 enemies.push({
 x:x,y:spawnY,
@@ -675,11 +674,11 @@ t:ts[Math.floor(Math.random()*ts.length)],
 skibidi:false,
 lane:l,
 targetLane:l,
-turnTimer:99, // никогда не поворачивает
+turnTimer:99,
 warningTimer:0,
 warningActive:false,
 turnCooldown:99,
-fromAhead:true // флаг — не поворачивать
+fromAhead:true
 });
 }
 
@@ -730,7 +729,6 @@ for(i=0;i<enemies.length;i++){
 var e=enemies[i];
 e.y+=e.s;
 
-// Поворот только для НЕ-ботов "в лоб"
 if(canTurn&&!e.pass&&!e.fromAhead){
 var playerNear=Math.abs(e.y-P.y)<180&&Math.abs(e.x-P.x)<150;
 e.turnTimer-=dt;
@@ -782,10 +780,12 @@ floats.push({t:'+'+g,x:e.x,y:e.y,l:1});
 
 enemies=enemies.filter(function(e){return e.y<H+200;});
 
-// Спавн: обычные в правой полосе + "в лоб" перед игроком
+// ★★★ УМЕНЬШЕНО КОЛИЧЕСТВО БОТОВ ★★★
+// Обычные: лимит 10→5, шанс 5%→2%
+// В лоб: шанс 3%→1.2%
 if(!noEnemies){
-if(enemies.length<10&&Math.random()<0.05)spawnNormalBot();
-if(dist>=100&&Math.random()<0.03)spawnAheadBot();
+if(enemies.length<5&&Math.random()<0.02)spawnNormalBot();
+if(dist>=100&&Math.random()<0.012)spawnAheadBot();
 }
 
 dist+=1.4;
