@@ -202,12 +202,12 @@ beanDone:false,offroadBest:0,offroadDist:0,f1Used:false,
 secretFound:false,bossBeaten:false};
 
 try{
-var d=JSON.parse(localStorage.getItem('obgon17')||'{}');
+var d=JSON.parse(localStorage.getItem('obgon18')||'{}');
 if(d.S)for(var k in d.S)S[k]=d.S[k];
 }catch(e){}
 
 function save(){
-localStorage.setItem('obgon17',JSON.stringify({S:S}));
+localStorage.setItem('obgon18',JSON.stringify({S:S}));
 }
 setInterval(save,5000);
 
@@ -434,7 +434,7 @@ if(log)log.textContent='+1 🚽';
 
 function adminReset(){
 if(!confirm('Точно сбросить ВСЁ?'))return;
-localStorage.removeItem('obgon17');
+localStorage.removeItem('obgon18');
 location.reload();
 }
 
@@ -587,7 +587,8 @@ vx:0};
 enemies=[];lines=[];
 coins=0;sess=0;dist=0;speed=0;obgony=0;
 for(var i=0;i<12;i++)lines.push({y:i*80-80});
-for(var j=0;j<4;j++)spawnE(-250-j*250);
+// ★ Стартовые боты — только в правой полосе (обычные) ★
+for(var j=0;j<4;j++)spawnNormalBot(-250-j*250);
 lastRec=S.best;
 }
 
@@ -616,46 +617,22 @@ var purple=(dist>=1000)&&Math.random()<0.08;
 pits.push({x:x,y:y!==undefined?y:-150,r:r,passed:false,purple:purple});
 }
 
-// ★★★ ГЛАВНОЕ ★★★
-// После 100 м — 40% ботов спавнятся ПРЯМО ПЕРЕД игроком (за 200-300 px)
-// И эти боты НЕ ПОВОРАЧИВАЮТ (canTurn=false)
-function spawnE(y){
+// ★★★ ОБЫЧНЫЙ БОТ — едет сверху, может поворачивать ★★★
+// Спавнится ТОЛЬКО в правой полосе (l=2)
+function spawnNormalBot(y){
 if(noEnemies)return;
 var rw=W*0.65;
 var rx=(W-rw)/2;
-var l=Math.floor(Math.random()*3);
+var l=2; // только правая полоса
 var laneW=rw/3;
 var laneX=rx+laneW*l;
-var offset=0.15+Math.random()*0.7;
+var offset=0.25+Math.random()*0.5;
 var x=laneX+laneW*offset;
 var cs=['#e53935','#43a047','#1e88e5',
 '#fb8c00','#8e24aa','#00acc1','#d81b60'];
 var ts=[0,1,2,4];
-
-var spawnY;
-var fromAhead=false; // бот появился прямо перед игроком?
-
-if(y!==undefined){
-// Явная позиция (стартовый спавн)
-spawnY=y;
-}else if(dist>=100&&gameMode==='overtake'&&Math.random()<0.4){
-// ★ После 100 м — 40% шанс спавна прямо перед игроком ★
-// Спавним впереди, но с отступом 250 px (чтобы игрок увидел)
-spawnY=P.y-250-Math.random()*50;
-// X — на траектории игрока (не далеко от его текущей X)
-x=P.x+(Math.random()-0.5)*80;
-// Ограничиваем полосами
-var mn=rx+P.w/2,mx=rx+rw-P.w/2;
-if(x<mn)x=mn;
-if(x>mx)x=mx;
-fromAhead=true;
-}else{
-// Обычный спавн сверху
-spawnY=-150;
-}
-
 enemies.push({
-x:x,y:spawnY,
+x:x,y:y!==undefined?y:-150,
 w:P.w,h:P.h,
 c:cs[Math.floor(Math.random()*cs.length)],
 s:2+Math.random()*1.5,
@@ -668,7 +645,41 @@ turnTimer:1+Math.random()*2,
 warningTimer:0,
 warningActive:false,
 turnCooldown:0,
-fromAhead:fromAhead // ← флаг: не поворачивать!
+fromAhead:false
+});
+}
+
+// ★★★ БОТ "В ЛОБ" — спавнится прямо перед игроком ★★★
+// НЕ ПОВОРАЧИВАЕТ. Спавнится только в левой (0) или центральной (1) полосе
+function spawnAheadBot(){
+if(noEnemies)return;
+var rw=W*0.65;
+var rx=(W-rw)/2;
+var l=Math.random()<0.5?0:1; // только левая или центральная
+var laneW=rw/3;
+var laneX=rx+laneW*l;
+var offset=0.3+Math.random()*0.4;
+var x=laneX+laneW*offset;
+var cs=['#e53935','#43a047','#1e88e5',
+'#fb8c00','#8e24aa','#00acc1','#d81b60'];
+var ts=[0,1,2,4];
+// Спавн прямо перед игроком
+var spawnY=P.y-250-Math.random()*50;
+enemies.push({
+x:x,y:spawnY,
+w:P.w,h:P.h,
+c:cs[Math.floor(Math.random()*cs.length)],
+s:2+Math.random()*1.5,
+pass:0,
+t:ts[Math.floor(Math.random()*ts.length)],
+skibidi:false,
+lane:l,
+targetLane:l,
+turnTimer:99, // никогда не поворачивает
+warningTimer:0,
+warningActive:false,
+turnCooldown:99,
+fromAhead:true // флаг — не поворачивать
 });
 }
 
@@ -719,7 +730,7 @@ for(i=0;i<enemies.length;i++){
 var e=enemies[i];
 e.y+=e.s;
 
-// Поворот — ТОЛЬКО если бот не из "спавна перед игроком"
+// Поворот только для НЕ-ботов "в лоб"
 if(canTurn&&!e.pass&&!e.fromAhead){
 var playerNear=Math.abs(e.y-P.y)<180&&Math.abs(e.x-P.x)<150;
 e.turnTimer-=dt;
@@ -771,7 +782,11 @@ floats.push({t:'+'+g,x:e.x,y:e.y,l:1});
 
 enemies=enemies.filter(function(e){return e.y<H+200;});
 
-if(!noEnemies&&enemies.length<10&&Math.random()<0.08)spawnE();
+// Спавн: обычные в правой полосе + "в лоб" перед игроком
+if(!noEnemies){
+if(enemies.length<10&&Math.random()<0.05)spawnNormalBot();
+if(dist>=100&&Math.random()<0.03)spawnAheadBot();
+}
 
 dist+=1.4;
 speed=Math.floor(180+Math.abs(P.vx)*20);
