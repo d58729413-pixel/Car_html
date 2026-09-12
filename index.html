@@ -6,7 +6,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font
 canvas{position:fixed;inset:0;width:100%;height:100%}
 #hud{position:fixed;top:6px;left:6px;right:6px;display:flex;justify-content:space-between;font-size:12px;z-index:6;pointer-events:none;font-weight:bold}
 #hud div{background:rgba(0,0,0,.55);padding:5px 10px;border-radius:8px}
-#ctrl{position:fixed;bottom:20px;left:0;right:0;display:flex;justify-content:space-between;padding:0 16px;z-index:5}
+#ctrl{position:fixed;bottom:20px;left:16px;display:flex;gap:12px;z-index:5}
 .tb{width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.15);border:2px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;font-size:32px;color:#fff;font-weight:bold}
 .tb.on{background:rgba(79,195,247,.5);border-color:#4fc3f7}
 #pedals{position:fixed;bottom:20px;right:16px;display:flex;flex-direction:column;gap:10px;z-index:5}
@@ -19,6 +19,7 @@ h1{font-size:22px;color:#fc0}h2{font-size:16px;color:#4fc3f7}p{font-size:12px;co
 button{padding:12px 20px;font-size:14px;font-weight:bold;background:linear-gradient(180deg,#4fc3f7,#0288d1);color:#fff;border:none;border-radius:10px;width:100%;max-width:280px}
 button.bk{background:linear-gradient(180deg,#888,#555)}
 button.off{background:linear-gradient(180deg,#8d6e63,#5d4037)}
+button.f1{background:linear-gradient(180deg,#c62828,#8e0000)}
 #garage,#ach{justify-content:flex-start!important;padding-top:10px!important;overflow:hidden!important}
 #gl,#al{width:100%;max-width:360px;overflow-y:auto!important;overflow-x:hidden;-webkit-overflow-scrolling:touch;touch-action:pan-y;padding:6px 0;flex:1 1 auto;min-height:0;max-height:calc(100vh - 160px)}
 #garage .bk,#ach .bk{flex-shrink:0}
@@ -68,6 +69,7 @@ button.off{background:linear-gradient(180deg,#8d6e63,#5d4037)}
 <button onclick="openAdmin()" style="background:rgba(0,0,0,.5);max-width:120px;font-size:11px;padding:8px;border:1px solid #444">🔐 Админ</button>
 <button onclick="start()">🚗 ИГРАТЬ</button>
 <button class="off" onclick="startOffroad()">🚙 ВНЕДОРОЖЬЕ</button>
+<button class="f1" onclick="startF1()">🏁 ФОРМУЛА-1</button>
 <button class="bk" onclick="showGarage()">🔧 ГАРАЖ</button>
 <button class="bk" onclick="showAch()">🏆 ДОСТИЖЕНИЯ</button>
 <p>💰 <span id="mc">0</span></p>
@@ -95,7 +97,7 @@ button.off{background:linear-gradient(180deg,#8d6e63,#5d4037)}
 <div id="toast"></div>
 <div id="mrbean">
 <div class="ava">😎</div>
-<div id="mrbeanTxt">MR BEAN: всем привет!</div>
+<div id="mrbeanTxt">MR BEAN: Приветики!!!</div>
 </div>
 <div id="admin">
 <h2>🔐 АДМИН-ПАНЕЛЬ</h2>
@@ -134,6 +136,9 @@ var CARS=[
 {n:"Pagani Huayra",m:400,p:10000000,c:'#6a1b9a',ac:null,t:2}
 ];
 
+var F1={n:"Болид Формулы-1",m:31,p:0,
+c:'#e53935',ac:'#fff',t:2,isF1:true};
+
 var ACHS=[
 {id:'f1',n:"🎯 Первый обгон",d:"Обгони 1 машину",r:10,
 chk:function(s){return s.obgony>=1}},
@@ -164,6 +169,10 @@ chk:function(s){return s.owned.indexOf(3)>=0}},
 {id:'sup',n:"🏎️ Суперкар",d:"Купи любой суперкар",r:200,
 chk:function(s){for(var i=0;i<s.owned.length;i++)
 if(CARS[s.owned[i]].t===2)return true;return false}},
+{id:'f1ach',n:"🏁 Формула-1",d:"Прокатись на болиде",r:300,
+chk:function(s){return s.f1Used||false}},
+{id:'offr',n:"🚙 Внедорожник",d:"Проедь в внедорожье 500 м",r:100,
+chk:function(s){return (s.offroadDist||0)>=500}},
 {id:'d500',n:"🛣️ Дальнобой",d:"Проедь 500 м",r:30,
 chk:function(s){return s.dist>=500}},
 {id:'d2000',n:"🛤️ Путешественник",d:"Проедь 2000 м",r:80,
@@ -180,15 +189,15 @@ chk:function(s){return (s.toiletCoins||0)>=1}}
 
 var S={coins:0,owned:[0],active:0,best:0,
 done:[],recBeats:0,clownCoins:0,toiletCoins:0,
-beanDone:false,offroadBest:0,offroadDist:0};
+beanDone:false,offroadBest:0,offroadDist:0,f1Used:false};
 
 try{
-var d=JSON.parse(localStorage.getItem('obgon9')||'{}');
+var d=JSON.parse(localStorage.getItem('obgon10')||'{}');
 if(d.S)for(var k in d.S)S[k]=d.S[k];
 }catch(e){}
 
 function save(){
-localStorage.setItem('obgon9',JSON.stringify({S:S}));
+localStorage.setItem('obgon10',JSON.stringify({S:S}));
 }
 setInterval(save,5000);
 
@@ -245,6 +254,7 @@ $('ach').classList.add('h');
 $('hud').classList.add('h');
 $('ctrl').classList.add('h');
 $('pedals').classList.add('h');
+$('pedals').style.display='none';
 $('mc').textContent=fmt(S.coins);
 gameOn=false;
 gameMode='overtake';
@@ -337,6 +347,8 @@ $('adminPass').value='';
 }
 }
 
+var f1Mode=false;
+
 function showAdminPanel(){
 var a=$('admin');
 a.innerHTML='<h2>⚙️ АДМИН-ПАНЕЛЬ</h2>'+
@@ -344,11 +356,18 @@ a.innerHTML='<h2>⚙️ АДМИН-ПАНЕЛЬ</h2>'+
 '<button class="green" onclick="adminGive(1000000)">+1 000 000 💰</button>'+
 '<button class="green" onclick="adminUnlockAll()">🔓 Открыть все машины</button>'+
 '<button class="green" onclick="adminUnlockAch()">🏆 Открыть все достижения</button>'+
+'<button class="green" onclick="adminToggleF1()">🏁 Вкл/Выкл Болид</button>'+
 '<button class="green" onclick="adminAddClown()">🤡 +1 Клоун</button>'+
 '<button class="green" onclick="adminAddToilet()">🚽 +1 Туалет</button>'+
 '<button onclick="adminReset()">🗑️ Сбросить</button>'+
 '<button class="bk" onclick="closeAdmin()">← Закрыть</button>'+
 '<div class="admin-ok" id="adminLog"></div>';
+}
+
+function adminToggleF1(){
+f1Mode=!f1Mode;
+var log=$('adminLog');
+if(log)log.textContent=f1Mode?'🏁 Болид активен! x31':'Болид выключен';
 }
 
 function adminGive(n){
@@ -390,7 +409,7 @@ if(log)log.textContent='+1 🚽';
 
 function adminReset(){
 if(!confirm('Точно сбросить ВСЁ?'))return;
-localStorage.removeItem('obgon9');
+localStorage.removeItem('obgon10');
 location.reload();
 }
 
@@ -405,41 +424,30 @@ mrbeanOn=true;
 var el=$('mrbean');
 var txt=$('mrbeanTxt');
 var ava=el.querySelector('.ava');
-
 var steps=[
-{who:'bean',msg:'всем привет!',d:2500},
+{who:'bean',msg:'Приветики!!!',d:2500},
 {act:function(){
-noEnemies=true;
-sizeBoost=true;
-enemies=[];
-setTimeout(function(){noEnemies=false;},4000);
-setTimeout(function(){sizeBoost=false;},4000);
-},d:2500},
-{who:'deep',msg:'Запустил семя в арбуз!!!',d:2500},
-{act:function(){
-S.clownCoins=(S.clownCoins||0)+1;
-S.toiletCoins=(S.toiletCoins||0)+1;
-save();updateClownHud();
 skibidiMode=true;
+sizeBoost=true;
 enemies.forEach(function(e){e.skibidi=true;});
 setTimeout(function(){
 skibidiMode=false;
+sizeBoost=false;
 enemies.forEach(function(e){e.skibidi=false;});
 },4000);
 },d:2500},
-{who:'bean',msg:'Пока!! Ждите следущий абьюзек',d:2500},
-{act:function(){
-S.coins+=200;
-if(gameOn)coins+=200;
-save();
-toast('+200 💰 от MR BEAN!');
-},d:500},
+{who:'deep',msg:'Арбуз маленький, так как код игры сломается (',d:4000},
+{who:'bean',msg:'Пока!',d:2500},
 {act:function(){
 el.classList.remove('show');
+S.coins+=200;
+if(gameOn)coins+=200;
+S.beanDone=true;
+save();
+toast('+200 💰 от MR BEAN!');
 mrbeanOn=false;
 },d:500}
 ];
-
 el.classList.add('show');
 var idx=0;
 function nextStep(){
@@ -453,7 +461,7 @@ if(s.act)s.act();
 setTimeout(nextStep,s.d);
 }
 nextStep();
-   }var P=null;
+}var P=null;
 var enemies=[];
 var lines=[];
 var coins=0;
@@ -479,8 +487,6 @@ var skibidiMode=false;
 
 // Внедорожье
 var pits=[];
-var offroadGas=0;
-var offroadBrake=0;
 var offroadSpeed=3;
 var offroadPitsPassed=0;
 
@@ -512,6 +518,14 @@ resize();
 initOffroad();
 gameOn=true;
 gameMode='offroad';
+f1Mode=false;
+}
+
+function startF1(){
+f1Mode=true;
+S.f1Used=true;
+save();
+start();
 }
 
 function init(){
@@ -578,22 +592,10 @@ el.addEventListener('mouseup',off);
 el.addEventListener('mouseleave',off);
 }
 
-function bindPedal(el,k){
-var on=function(e){e.preventDefault();inp[k]=1;el.classList.add('on');};
-var off=function(e){e.preventDefault();inp[k]=0;el.classList.remove('on');};
-el.addEventListener('touchstart',on,{passive:false});
-el.addEventListener('touchend',off,{passive:false});
-el.addEventListener('touchcancel',off,{passive:false});
-el.addEventListener('mousedown',on);
-el.addEventListener('mouseup',off);
-el.addEventListener('mouseleave',off);
-}
-
 function update(dt){
 if(!gameOn||!P)return;
 timeOfDay=(timeOfDay+dt/60)%1;
 rainbowHue=(rainbowHue+dt*200)%360;
-
 if(gameMode==='overtake')updateOvertake(dt);
 else updateOffroad(dt);
 }
@@ -628,6 +630,7 @@ gameOn=false;crash('overtake');return;
 if(!e.pass&&e.y>P.y+P.h/2){
 e.pass=1;obgony++;
 var mult=CARS[S.active].m;
+if(f1Mode)mult=F1.m;
 if(beanBonus)mult*=2;
 var g=Math.floor(10*mult);
 coins+=g;sess+=g;
@@ -642,7 +645,7 @@ dist+=1.4;
 speed=Math.floor(180+Math.abs(P.vx)*20);
 
 $('coins').textContent=fmt(S.coins+coins);
-$('mult').textContent='x'+CARS[S.active].m;
+$('mult').textContent='x'+(f1Mode?F1.m:CARS[S.active].m);
 $('spd').textContent=speed;
 
 checkTimer+=dt;
@@ -650,7 +653,8 @@ if(checkTimer>0.5){
 checkTimer=0;
 checkAch({obgony:obgony,sess:sess,dist:dist,
 owned:S.owned,recBeats:S.recBeats,
-clownCoins:S.clownCoins,toiletCoins:S.toiletCoins});
+clownCoins:S.clownCoins,toiletCoins:S.toiletCoins,
+f1Used:S.f1Used,offroadDist:S.offroadDist});
 }
 }
 
@@ -669,21 +673,18 @@ var mx=rx+rw-P.w/2;
 if(P.x<mn){P.x=mn;P.vx=0;}
 if(P.x>mx){P.x=mx;P.vx=0;}
 
-// Скорость внедорожья
 if(inp.gas)offroadSpeed+=0.15;
 if(inp.brk)offroadSpeed-=0.3;
 if(!inp.gas&&!inp.brk)offroadSpeed-=0.03;
 if(offroadSpeed<1)offroadSpeed=1;
 if(offroadSpeed>12)offroadSpeed=12;
 
-// Движение полос
 for(var i=0;i<lines.length;i++){
 lines[i].y+=offroadSpeed;
 if(lines[i].y>H+40)lines[i].y=-40;
 }
 bgOff+=offroadSpeed;
 
-// Ямы
 for(i=0;i<pits.length;i++){
 var pit=pits[i];
 pit.y+=offroadSpeed;
@@ -717,7 +718,8 @@ if(checkTimer>0.5){
 checkTimer=0;
 checkAch({obgony:0,sess:sess,dist:dist,
 owned:S.owned,recBeats:S.recBeats,
-clownCoins:S.clownCoins,toiletCoins:S.toiletCoins});
+clownCoins:S.clownCoins,toiletCoins:S.toiletCoins,
+f1Used:S.f1Used,offroadDist:S.offroadDist});
 }
 }
 
@@ -728,12 +730,14 @@ if(mode==='overtake'){
 if(coins>S.best){S.best=coins;newRec=true;}
 if(newRec&&lastRec>0)S.recBeats++;
 }else{
-if(dist>S.offroadBest){S.offroadBest=Math.floor(dist);}
+if(dist>S.offroadBest)S.offroadBest=Math.floor(dist);
+if(dist>S.offroadDist)S.offroadDist=Math.floor(dist);
 }
 save();
 checkAch({obgony:obgony,sess:sess,dist:dist,
 owned:S.owned,recBeats:S.recBeats,
-clownCoins:S.clownCoins,toiletCoins:S.toiletCoins});
+clownCoins:S.clownCoins,toiletCoins:S.toiletCoins,
+f1Used:S.f1Used,offroadDist:S.offroadDist});
 $('over').classList.remove('h');
 $('fc').textContent=fmt(coins);
 $('fo').textContent=mode==='overtake'?obgony:offroadPitsPassed;
@@ -777,7 +781,6 @@ function rainbowColor(offset){
 return 'hsl('+((rainbowHue+offset)%360)+',100%,55%)';
 }
 
-// === Обгон: город ===
 function drawCity(){
 var rw=W*0.65;
 var rx=(W-rw)/2;
@@ -827,17 +830,13 @@ ctx.beginPath();ctx.moveTo(rx+rw+8,0);ctx.lineTo(rx+rw+8,H);ctx.stroke();
 ctx.setLineDash([]);
 }
 
-// === Внедорожье: грунтовка ===
 function drawOffroadBg(){
-// Земля
 ctx.fillStyle=timeOfDay>0.5?'#3a2a1a':'#6b5233';
 ctx.fillRect(0,0,W,H);
 var rw=W*0.75;
 var rx=(W-rw)/2;
-// Трасса (грунтовка)
 ctx.fillStyle=timeOfDay>0.5?'#4a3a25':'#8b6f47';
 ctx.fillRect(rx,0,rw,H);
-// Кочки
 var sh=(bgOff*1.2)%80;
 for(var i=-2;i<H/80+2;i++){
 var y=i*80+sh-80;
@@ -850,11 +849,9 @@ ctx.fillStyle='rgba(139,90,43,.4)';
 ctx.beginPath();ctx.arc(cx,cy-1,2,0,7);ctx.fill();
 }
 }
-// Камни по краям
 ctx.fillStyle='#5a4a3a';
 ctx.fillRect(rx-25,0,25,H);
 ctx.fillRect(rx+rw,0,25,H);
-// Кусты на обочинах
 var sh2=(bgOff*1.2)%110;
 for(var k=-2;k<H/110+2;k++){
 var by=k*110+sh2-110;
@@ -866,7 +863,6 @@ ctx.beginPath();ctx.arc(rx+rw+15,by+30,12,0,7);ctx.fill();
 ctx.fillStyle='#4a6a35';
 ctx.beginPath();ctx.arc(rx+rw+18,by+26,8,0,7);ctx.fill();
 }
-// Разметка по краям
 ctx.strokeStyle='rgba(255,255,255,.2)';
 ctx.setLineDash([10,10]);
 ctx.lineWidth=3;
@@ -875,26 +871,21 @@ ctx.beginPath();ctx.moveTo(rx+rw-2,0);ctx.lineTo(rx+rw-2,H);ctx.stroke();
 ctx.setLineDash([]);
 }
 
-// Ямы (чёрные дыры)
 function drawPits(){
 for(var i=0;i<pits.length;i++){
 var p=pits[i];
 if(p.y<-50||p.y>H+50)continue;
-// Внешнее свечение
 var g=ctx.createRadialGradient(p.x,p.y,p.r*0.3,p.x,p.y,p.r*1.4);
 g.addColorStop(0,'rgba(0,0,0,1)');
 g.addColorStop(0.7,'rgba(0,0,0,.9)');
 g.addColorStop(1,'rgba(0,0,0,0)');
 ctx.fillStyle=g;
 ctx.beginPath();ctx.arc(p.x,p.y,p.r*1.4,0,7);ctx.fill();
-// Ядро
 ctx.fillStyle='#000';
 ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);ctx.fill();
-// Край
 ctx.strokeStyle='rgba(90,60,30,.8)';
 ctx.lineWidth=3;
 ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);ctx.stroke();
-// Кочки рядом
 ctx.fillStyle='rgba(139,90,43,.7)';
 for(var k=0;k<6;k++){
 var a=k*(Math.PI/3);
@@ -905,14 +896,11 @@ ctx.fill();
 }
 }
 
-// === Пикап ===
 function drawPickup(x,y,w,h,color,accent){
 ctx.save();
 ctx.translate(x,y);
-// Тень
 ctx.fillStyle='rgba(0,0,0,.5)';
 ctx.beginPath();ctx.ellipse(3,5,w*0.7,h*0.55,0,0,7);ctx.fill();
-// Кузов
 var r=6;
 ctx.beginPath();
 ctx.moveTo(-w/2+r,-h/2);ctx.lineTo(w/2-r,-h/2);
@@ -933,7 +921,6 @@ bg.addColorStop(0.7,'#2a3a1a');
 bg.addColorStop(0.85,color);
 bg.addColorStop(1,'#3a4a2a');
 ctx.fillStyle=bg;ctx.fill();
-// Кабина (сзади)
 ctx.fillStyle='rgba(15,20,30,.95)';
 ctx.beginPath();
 ctx.moveTo(-w/2+6,h*0.1);
@@ -941,7 +928,6 @@ ctx.lineTo(w/2-6,h*0.1);
 ctx.lineTo(w/2-8,h*0.32);
 ctx.lineTo(-w/2+8,h*0.32);
 ctx.closePath();ctx.fill();
-// Заднее стекло
 ctx.fillStyle='rgba(180,220,255,.25)';
 ctx.beginPath();
 ctx.moveTo(-w/2+7,h*0.13);
@@ -949,13 +935,10 @@ ctx.lineTo(-w/2+15,h*0.13);
 ctx.lineTo(-w/2+13,h*0.3);
 ctx.lineTo(-w/2+8,h*0.3);
 ctx.closePath();ctx.fill();
-// Кузов спереди
 ctx.fillStyle=color;
 ctx.fillRect(-w/2+6,-h/2+8,w-12,h*0.35);
-// Кузов сзади (груз)
 ctx.fillStyle='rgba(0,0,0,.15)';
 ctx.fillRect(-w/2+4,h*0.35,w-8,h*0.55);
-// Фары
 ctx.fillStyle='#fff9c4';
 ctx.beginPath();ctx.ellipse(-w/2+7,-h/2+3,5,3,0,0,7);ctx.fill();
 ctx.beginPath();ctx.ellipse(w/2-7,-h/2+3,5,3,0,0,7);ctx.fill();
@@ -971,24 +954,20 @@ ctx.beginPath();ctx.arc(hx,-h/2+3,50,0,7);ctx.fill();
 });
 ctx.restore();
 }
-// Стопы
 ctx.fillStyle='#c62828';
 ctx.fillRect(-w/2+4,h/2-4,7,4);
 ctx.fillRect(w/2-11,h/2-4,7,4);
-// Колёса (большие внедорожные)
 ctx.fillStyle='#0a0a0a';
 ctx.fillRect(-w/2-4,-h/2+14,7,22);
 ctx.fillRect(w/2-3,-h/2+14,7,22);
 ctx.fillRect(-w/2-4,h/2-30,7,22);
 ctx.fillRect(w/2-3,h/2-30,7,22);
-// Обводка
 ctx.strokeStyle='rgba(255,255,255,.2)';
 ctx.lineWidth=1;
 ctx.strokeRect(-w/2+1,-h/2+1,w-2,h-2);
 ctx.restore();
 }
 
-// === Общая отрисовка ===
 function draw(){
 if(W<=0||H<=0)return;
 if(gameMode==='overtake')drawOvertake();
@@ -1033,6 +1012,7 @@ else drawCar(e.x,e.y,e.w,e.h,e.c,null,0,e.t,false);
 }
 if(P){
 var c=CARS[S.active];
+if(f1Mode)c=F1;
 var carColor=c.c;
 if(rainbowMode)carColor=rainbowColor(0);
 var scale=sizeBoost?2:1;
@@ -1052,6 +1032,12 @@ ctx.fillStyle='rgba(255,204,0,.9)';
 ctx.font='bold 14px sans-serif';
 ctx.textAlign='center';
 ctx.fillText('⭐ x2 АКТИВЕН',W/2,60);
+}
+if(f1Mode){
+ctx.fillStyle='rgba(255,50,50,.95)';
+ctx.font='bold 14px sans-serif';
+ctx.textAlign='center';
+ctx.fillText('🏁 БОЛИД x31',W/2,80);
 }
 }
 
@@ -1244,7 +1230,6 @@ ctx.strokeRect(-w/2+1,-h/2+1,w-2,h-2);
 ctx.restore();
 }
 
-// Запуск
 var lt=performance.now();
 function loop(n){
 var dt=Math.min((n-lt)/1000,.05);
@@ -1260,8 +1245,8 @@ showMenu();
 updateClownHud();
 bind($('bl'),'l');
 bind($('br'),'r');
-bindPedal($('pg'),'gas');
-bindPedal($('pb'),'brk');
+bind($('pg'),'gas');
+bind($('pb'),'brk');
 requestAnimationFrame(loop);
 
 setInterval(function(){
