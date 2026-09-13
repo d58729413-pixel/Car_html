@@ -1,1942 +1,949 @@
-<!DOCTYPE html><html><head><meta charset="UTF-8">
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
-<title>Обгон</title><style>
-*{margin:0;padding:0;box-sizing:border-box;user-select:none;-webkit-tap-highlight-color:transparent}
-html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:sans-serif;touch-action:none}
-canvas{position:fixed;inset:0;width:100%;height:100%}
-#hud{position:fixed;top:6px;left:6px;right:6px;display:flex;justify-content:space-between;font-size:12px;z-index:6;pointer-events:none;font-weight:bold}
-#hud div{background:rgba(0,0,0,.55);padding:5px 10px;border-radius:8px}
-#ctrl{position:fixed;bottom:20px;left:16px;display:flex;gap:12px;z-index:5}
-.tb{width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.15);border:2px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;font-size:32px;color:#fff;font-weight:bold}
-.tb.on{background:rgba(79,195,247,.5);border-color:#4fc3f7}
-#pedals{position:fixed;bottom:20px;right:16px;display:flex;flex-direction:column;gap:10px;z-index:5}
-.ped{width:70px;height:70px;border-radius:50%;background:rgba(76,175,80,.4);border:2px solid #4caf50;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:bold;color:#fff}
-.ped.b{width:60px;height:60px;background:rgba(255,82,82,.4);border-color:#ff5252}
-.ped.on{filter:brightness(1.5)}
-#menu,#garage,#over,#ach{position:fixed;inset:0;background:rgba(0,0,0,.94);display:flex;flex-direction:column;justify-content:center;align-items:center;gap:10px;padding:16px;z-index:20;text-align:center}
-#garage,#ach{justify-content:flex-start!important;padding-top:12px!important;overflow:hidden!important}
-#gl,#al{width:100%;max-width:380px;height:65vh;overflow-y:scroll!important;overflow-x:hidden;-webkit-overflow-scrolling:touch!important;touch-action:pan-y!important;padding:6px 4px;flex:0 0 auto;border:1px solid #222;border-radius:10px;background:rgba(0,0,0,.3)}
-#gl::-webkit-scrollbar,#al::-webkit-scrollbar{width:6px}
-#gl::-webkit-scrollbar-thumb,#al::-webkit-scrollbar-thumb{background:#4fc3f7;border-radius:3px}
-.garTabs{display:flex;gap:8px;width:100%;max-width:380px;margin-bottom:6px}
-.garTabs button{padding:8px 12px;font-size:12px;font-weight:bold;background:linear-gradient(180deg,#444,#222);color:#ccc;border:2px solid #333;border-radius:8px;width:100%}
-.garTabs button.act{background:linear-gradient(180deg,#4fc3f7,#0288d1);color:#fff;border-color:#4fc3f7}
-.h{display:none!important}
-h1{font-size:22px;color:#fc0}h2{font-size:16px;color:#4fc3f7}p{font-size:12px;color:#ccc}
-button{padding:12px 20px;font-size:14px;font-weight:bold;background:linear-gradient(180deg,#4fc3f7,#0288d1);color:#fff;border:none;border-radius:10px;width:100%;max-width:280px}
-button.bk{background:linear-gradient(180deg,#888,#555)}
-button.off{background:linear-gradient(180deg,#8d6e63,#5d4037)}
-button.sale{background:linear-gradient(90deg,#ff0000,#ff00ff,#00ffff,#ffff00,#ff0000);background-size:400% 100%;animation:saleAnim 2s linear infinite;color:#fff;text-shadow:1px 1px 3px #000;font-weight:bold}
-@keyframes saleAnim{0%{background-position:0% 50%}100%{background-position:400% 50%}}
-.cc,.ac{background:#1e1e1e;border:2px solid #333;border-radius:9px;padding:10px;margin:5px 0;display:flex;justify-content:space-between;align-items:center;font-size:12px;gap:8px}
-.cc.on{border-color:#4caf50}.cc.act{border-color:#fc0;background:#2a2410}
-.cc.saleCard{border-color:#ff00ff;background:linear-gradient(90deg,rgba(255,0,255,.15),rgba(0,255,255,.15));animation:saleCardAnim 3s linear infinite}
-@keyframes saleCardAnim{0%{border-color:#ff0000}25%{border-color:#ff00ff}50%{border-color:#00ffff}75%{border-color:#ffff00}100%{border-color:#ff0000}}
-.ac.done{border-color:#4caf50;background:#0e1a0e}
-.cc .i,.ac .i{text-align:left;flex:1;min-width:0}
-.cc .n,.ac .n{font-weight:bold;font-size:13px}
-.cc .d,.ac .d{font-size:10px;color:#aaa;margin-top:2px}
-.cc button{padding:7px 12px;font-size:11px;width:auto;max-width:130px;flex-shrink:0}
-.cc button.on{background:#4caf50}.cc button.act{background:#fc0;color:#000}
-.ac .rew{background:#fc0;color:#000;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:bold;flex-shrink:0}
-.ac.done .rew{background:#4caf50;color:#fff}
-#toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.9);border:2px solid #fc0;border-radius:12px;padding:16px 24px;font-size:14px;font-weight:bold;color:#fc0;opacity:0;transition:opacity .3s;z-index:100;pointer-events:none;text-align:center}
-#toast.on{opacity:1}
-#mrbean{position:fixed;top:8px;left:50%;transform:translateX(-50%) translateY(-100px);background:linear-gradient(135deg,#ffcc00,#ff6f00);border:3px solid #000;border-radius:14px;padding:10px 16px;font-size:13px;font-weight:bold;color:#000;z-index:80;opacity:0;transition:all .4s;pointer-events:none;box-shadow:0 6px 20px rgba(0,0,0,.5);max-width:90%;display:flex;align-items:center;gap:8px}
-#mrbean.show{opacity:1;transform:translateX(-50%) translateY(0)}
-#mrbean .ava{width:34px;height:34px;border-radius:50%;background:#000;color:#ffcc00;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
-#clownHud{position:fixed;top:44px;right:8px;background:linear-gradient(135deg,#ff00ff,#ffcc00);border:2px solid #000;border-radius:10px;padding:6px 12px;font-size:14px;font-weight:bold;color:#000;z-index:7;display:none}
-#toiletHud{position:fixed;top:82px;right:8px;background:linear-gradient(135deg,#00bcd4,#fff);border:2px solid #000;border-radius:10px;padding:6px 12px;font-size:14px;font-weight:bold;color:#000;z-index:7;display:none}
-#hpBar{position:fixed;bottom:110px;left:50%;transform:translateX(-50%);width:200px;height:18px;background:rgba(0,0,0,.7);border:2px solid #fff;border-radius:9px;z-index:8;display:none;overflow:hidden}
-#hpFill{height:100%;width:100%;background:linear-gradient(90deg,#4caf50,#8bc34a);transition:width .3s}
-#hpText{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:11px;font-weight:bold;color:#fff;text-shadow:1px 1px 2px #000}
-#admin{position:fixed;inset:0;background:rgba(0,0,0,.96);display:none;flex-direction:column;justify-content:center;align-items:center;gap:10px;padding:16px;z-index:50;text-align:center;overflow-y:auto}
-#admin h2{color:#ff5252;font-size:18px}
-#admin input{padding:12px;font-size:14px;background:#1e1e1e;color:#fff;border:2px solid #333;border-radius:8px;width:100%;max-width:280px;text-align:center;font-family:monospace}
-#admin button{padding:10px 16px;font-size:13px;font-weight:bold;background:linear-gradient(180deg,#ff5252,#c62828);color:#fff;border:none;border-radius:8px;width:100%;max-width:280px}
-#admin button.green{background:linear-gradient(180deg,#4caf50,#2e7d32)}
-#admin button.bk{background:linear-gradient(180deg,#666,#333)}
-.admin-ok{color:#4caf50;font-size:12px;margin-top:6px}
-</style></head><body>
-<canvas id="cv"></canvas>
-<div id="hud" class="h">
-<div>💰 <span id="coins">0</span></div>
-<div>⭐ x<span id="mult">1</span></div>
-<div>🏁 <span id="spd">0</span></div>
-</div>
-<div id="hpBar"><div id="hpFill"></div><div id="hpText">100 / 100</div></div>
-<div id="clownHud">🤡 <span id="clownCount">0</span></div>
-<div id="toiletHud">🚽 <span id="toiletCount">0</span></div>
-<div id="ctrl" class="h">
-<div class="tb" id="bl">◀</div>
-<div class="tb" id="br">▶</div>
-</div>
-<div id="pedals" class="h" style="display:none">
-<div class="ped" id="pg">ГАЗ</div>
-<div class="ped b" id="pb">ТОРМ</div>
-</div>
-<div id="menu">
-<h1 id="logo">🏎️ ОБГОН</h1>
-<button onclick="openAdmin()" style="background:rgba(0,0,0,.5);max-width:120px;font-size:11px;padding:8px;border:1px solid #444">🔐 Админ</button>
-<button onclick="start()">🚗 ИГРАТЬ</button>
-<button class="off" onclick="startOffroad()">🚙 ВНЕДОРОЖЬЕ</button>
-<button class="bk" onclick="showGarage()">🔧 ГАРАЖ</button>
-<button class="bk" onclick="showAch()">🏆 ДОСТИЖЕНИЯ</button>
-<p>💰 <span id="mc">0</span></p>
-</div>
-<div id="garage" class="h">
-<h2>🔧 ГАРАЖ — листай ↓</h2>
-<p>💰 <span id="gc">0</span></p>
-<div class="garTabs">
-<button id="tabSport" class="act" onclick="switchGarTab('sport')">🏎️ Спорт-кары</button>
-<button id="tabOff" onclick="switchGarTab('off')">🚙 Внедорожья</button>
-</div>
-<div id="gl"></div>
-<button class="bk" onclick="showMenu()">← Назад</button>
-</div>
-<div id="ach" class="h">
-<h2>🏆 ДОСТИЖЕНИЯ — листай ↓</h2>
-<p>💰 <span id="ac">0</span> · <span id="ap">0</span>/22</p>
-<div id="al"></div>
-<button class="bk" onclick="showMenu()">← Назад</button>
-</div>
-<div id="over" class="h">
-<h1>💥 АВАРИЯ</h1>
-<p>Заработано: <span id="fc">0</span> 💰</p>
-<p>Обгонов: <span id="fo">0</span></p>
-<p>Дистанция: <span id="fd">0</span> м</p>
-<button onclick="restartMode()">🔄 Заново</button>
-<button class="bk" onclick="showMenu()">🏠 В меню</button>
-</div>
-<div id="toast"></div>
-<div id="mrbean">
-<div class="ava">😎</div>
-<div id="mrbeanTxt">MR BEAN: Приветики!!!</div>
-</div>
-<div id="admin">
-<h2>🔐 АДМИН-ПАНЕЛЬ</h2>
-<input type="password" id="adminPass" placeholder="Пароль">
-<button onclick="checkAdmin()">Войти</button>
-<div id="adminMsg" class="admin-ok"></div>
-</div>
-<script>var cv=document.getElementById('cv');
-var ctx=cv.getContext('2d');
-var W=innerWidth,H=innerHeight;
+<title>🏎️ Обгон 2.0</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+body{background:#000;color:#fff;font-family:'Courier New',monospace;display:flex;align-items:center;justify-content:center;min-height:100vh;overflow:hidden}
+#game{width:100%;max-width:500px;background:#111;border-radius:12px;padding:10px;position:relative;min-height:100vh;display:flex;flex-direction:column}
+h1{text-align:center;color:#f1c40f;font-size:26px;margin:16px 0 6px;letter-spacing:3px;text-shadow:0 0 20px rgba(241,196,15,.5)}
+.subtitle{text-align:center;color:#666;font-size:11px;margin-bottom:14px;letter-spacing:2px}
+.screen{display:none;flex:1;flex-direction:column;align-items:center;justify-content:flex-start;padding:8px}
+.screen.active{display:flex}
+.menu-btn{display:block;width:100%;padding:18px;margin:8px 0;background:linear-gradient(135deg,#2c3e50,#34495e);color:#fff;border:2px solid #444;border-radius:12px;font-family:inherit;font-size:16px;font-weight:bold;cursor:pointer;transition:.15s;letter-spacing:1px;text-align:center}
+.menu-btn:active{transform:scale(.97);background:linear-gradient(135deg,#3498db,#2980b9)}
+.menu-btn.blue{background:linear-gradient(135deg,#00b4d8,#0077b6);border-color:#00b4d8}
+.menu-btn.pink{background:linear-gradient(135deg,#c98b8b,#a56b6b);border-color:#c98b8b}
+.menu-btn.gray{background:linear-gradient(135deg,#95a5a6,#7f8c8d);border-color:#95a5a6}
+.menu-btn.gray2{background:linear-gradient(135deg,#bdc3c7,#95a5a6);border-color:#bdc3c7;color:#333}
+.menu-btn.green{background:linear-gradient(135deg,#2ecc71,#27ae60);border-color:#2ecc71}
+.menu-btn.red{background:linear-gradient(135deg,#e74c3c,#c0392b);border-color:#e74c3c}
+.admin-mini{display:block;width:auto;padding:6px 20px;margin:0 auto 14px;background:rgba(255,255,255,.08);color:#ccc;border:1px solid #444;border-radius:20px;font-family:inherit;font-size:11px;cursor:pointer;letter-spacing:1px}
+.coins-display{text-align:center;color:#f1c40f;font-size:18px;font-weight:bold;margin-top:auto;padding:16px 0 8px;letter-spacing:1px}
+canvas{display:block;width:100%;height:auto;border-radius:8px;touch-action:none;background:#000}
+.controls{display:flex;justify-content:space-between;margin-top:8px;gap:8px}
+.controls.hide{display:none}
+.ctrl{flex:1;height:70px;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.25);border-radius:50%;color:#fff;font-size:28px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.ctrl:active{background:rgba(233,69,96,.6);transform:scale(.95)}
+.btn{display:block;width:100%;padding:11px;margin:5px 0;background:#e94560;color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:13px;font-weight:bold;cursor:pointer}
+.btn:active{transform:scale(.97)}
+.btn.green{background:#2ecc71}.btn.blue{background:#3498db}.btn.gold{background:#f39c12}.btn.dark{background:#2c2c2c;border:1px solid #666}
+.overlay{position:absolute;inset:0;background:rgba(10,10,20,.96);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;border-radius:12px;padding:16px;text-align:center;z-index:10;overflow-y:auto}
+.hidden{display:none!important}
+.stat{font-size:13px;margin:3px 0}
+.big{font-size:22px;color:#f1c40f;font-weight:bold}
+.shop-item{display:flex;justify-content:space-between;align-items:center;width:100%;padding:8px 10px;background:#0f3460;border-radius:8px;margin:4px 0;font-size:12px;border-left:4px solid #e94560}
+.shop-item.bought{border-left-color:#2ecc71;opacity:.7}
+.shop-item.owned{border-left-color:#f1c40f;background:#1a3a5c}
+.shop-item .info{text-align:left;flex:1}
+.shop-item .name{font-weight:bold;color:#fff}
+.shop-item .desc{font-size:10px;color:#aaa;margin-top:2px}
+.shop-item button{padding:6px 10px;background:#f39c12;border:none;border-radius:6px;color:#000;font-weight:bold;cursor:pointer;font-size:11px}
+.shop-item button:disabled{background:#555;color:#999}
+.coin{font-size:15px;color:#f1c40f;font-weight:bold;margin-bottom:8px}
+.section-title{width:100%;text-align:left;color:#e94560;font-size:11px;font-weight:bold;margin:8px 0 3px;letter-spacing:1px}
+.stats-table{width:100%;background:#0f3460;border-radius:10px;padding:14px;margin:8px 0}
+.stats-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08);font-size:13px}
+.stats-row:last-child{border-bottom:none}
+.stats-row .val{color:#f1c40f;font-weight:bold}
+.admin-input{width:100%;padding:10px;background:#0a0a0a;border:2px solid #e94560;border-radius:8px;color:#fff;font-family:inherit;font-size:14px;text-align:center;margin:10px 0;letter-spacing:2px}
+.admin-input:focus{outline:none;border-color:#f1c40f}
+</style>
+</head>
+<body>
+<div id="game">
 
-function resize(){
-var d=Math.min(devicePixelRatio||1,2);
-W=innerWidth;H=innerHeight;
-cv.width=W*d;cv.height=H*d;
-cv.style.width=W+'px';
-cv.style.height=H+'px';
-ctx.setTransform(d,0,0,d,0,0);
-}
+<!-- ===== ГЛАВНОЕ МЕНЮ ===== -->
+<div class="screen active" id="scMenu">
+<h1>🏎️ ОБГОН 2.0</h1>
+<div class="subtitle">— ГОНКИ ПО ТРАССЕ —</div>
+<button class="admin-mini" onclick="openAdminLogin()">🔒 Админ</button>
 
-var CARS=[
-{n:"Lada 2107",m:1,p:0,c:'#d0d0d0',ac:null,t:0},
-{n:"Honda Civic",m:2,p:500,c:'#e53935',ac:null,t:4},
-{n:"Toyota Supra",m:3,p:1500,c:'#ffb300',ac:null,t:1},
-{n:"Toyota Prius",m:4,p:3500,c:'#c8e6c9',ac:null,t:4},
-{n:"Nissan Skyline R33",m:5,p:4000,c:'#e8e8ec',ac:'#1e3a8a',t:1},
-{n:"Mazda RX-7",m:7,p:8000,c:'#43a047',ac:null,t:1},
-{n:"Subaru WRX",m:10,p:15000,c:'#039be5',ac:'#fdd835',t:0},
-{n:"Mitsubishi Evo",m:14,p:30000,c:'#8e24aa',ac:null,t:0},
-{n:"BMW M3",m:20,p:60000,c:'#f57c00',ac:null,t:0},
-{n:"Porsche 911",m:30,p:120000,c:'#212121',ac:null,t:1},
-{n:"Bugatti Chiron",m:50,p:300000,c:'#00bcd4',ac:null,t:2},
-{n:"Ferrari F8",m:75,p:600000,c:'#c62828',ac:null,t:2},
-{n:"Lambo Aventador",m:100,p:1200000,c:'#f9a825',ac:null,t:2},
-{n:"McLaren P1",m:150,p:2500000,c:'#ff6f00',ac:null,t:2},
-{n:"Koenigsegg",m:250,p:5000000,c:'#455a64',ac:null,t:2},
-{n:"Pagani Huayra",m:400,p:10000000,c:'#6a1b9a',ac:null,t:2},
-{n:"🏁 Red Bull F1",m:200,p:1000000,c:'#1a237e',ac:'#ffd600',t:2,isRBR:true,sale:true}
+<button class="menu-btn blue" onclick="startMode('overtake')">🚗 ИГРАТЬ</button>
+<button class="menu-btn pink" onclick="startMode('oncoming')">🏁 ВСТРЕЧКА</button>
+<button class="menu-btn gray" onclick="showScreen('scStats');renderStats()">📊 СТАТИСТИКА</button>
+<button class="menu-btn gray2" onclick="openShop()">🛒 МАГАЗИН</button>
+
+<div class="coins-display">💰 <span id="menuCoins">0</span></div>
+</div>
+
+<!-- ===== ИГРА ===== -->
+<div class="screen" id="scGame">
+<div style="position:relative;width:100%">
+<canvas id="road" width="460" height="620"></canvas>
+</div>
+<div class="controls" id="controls">
+<div class="ctrl" id="btnLeft">◀</div>
+<div class="ctrl" id="btnRight">▶</div>
+</div>
+</div>
+
+<!-- ===== СТАТИСТИКА ===== -->
+<div class="screen" id="scStats">
+<h1 style="font-size:20px">📊 СТАТИСТИКА</h1>
+<div class="stats-table" id="statsTable"></div>
+<button class="btn blue" onclick="showScreen('scMenu')">↩ НАЗАД</button>
+</div>
+
+<!-- ===== МАГАЗИН ===== -->
+<div class="screen" id="scShop">
+<h1 style="font-size:20px;color:#f39c12">🛒 МАГАЗИН</h1>
+<div class="coin">💰 <span id="shopCoins">0</span></div>
+<div id="shopList" style="width:100%"></div>
+<button class="btn blue" onclick="showScreen('scMenu')">↩ НАЗАД</button>
+</div>
+
+<!-- ===== АДМИН ВХОД ===== -->
+<div class="overlay hidden" id="adminLogin">
+<div style="font-size:16px;color:#e94560;font-weight:bold;margin-bottom:4px">🔒 ADMIN LOGIN</div>
+<input type="password" id="adminPass" class="admin-input" placeholder="•••••••••" autocomplete="off">
+<button class="btn green" onclick="checkPass()">🔓 ВОЙТИ</button>
+<button class="btn dark" onclick="closeAdmin()">↩ ОТМЕНА</button>
+<div id="adminError" style="color:#e74c3c;font-size:12px;margin-top:6px;height:14px"></div>
+</div>
+
+<!-- ===== АДМИН ПАНЕЛЬ ===== -->
+<div class="overlay hidden" id="adminPanel">
+<div style="font-size:16px;color:#2ecc71;font-weight:bold;margin-bottom:8px">🔓 ADMIN MODE</div>
+<div class="coin">💰 Монеты: <span id="adminCoins">0</span></div>
+<div class="section-title">💵 ЧИТЫ</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;width:100%">
+<button class="btn gold" onclick="addCoins(100)">+100💰</button>
+<button class="btn gold" onclick="addCoins(1000)">+1000💰</button>
+<button class="btn gold" onclick="addCoins(10000)">+10000💰</button>
+<button class="btn gold" onclick="addCoins(999999)">+999999💰</button>
+</div>
+<div class="section-title">🚗 МАШИНЫ</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;width:100%">
+<button class="btn blue" onclick="giveCar('toyota')">🚗 Toyota</button>
+<button class="btn blue" onclick="giveCar('prius')">🌱 Prius</button>
+<button class="btn blue" onclick="giveCar('skyline')">🏁 Skyline</button>
+<button class="btn blue" onclick="maxUpgrades()">⚙ МАКС</button>
+</div>
+<div class="section-title">⚙ УПРАВЛЕНИЕ</div>
+<button class="btn dark" onclick="resetProgress()">🗑 Сброс прогресса</button>
+<button class="btn green" onclick="closeAdmin()">↩ ВЫЙТИ</button>
+</div>
+
+<!-- ===== GAME OVER ===== -->
+<div class="overlay hidden" id="gameover">
+<div style="font-size:44px;margin:10px 0">💥</div>
+<div style="font-size:20px;color:#e74c3c;font-weight:bold;margin-bottom:16px">АВАРИЯ!</div>
+<div class="stat">Обгонов: <span class="big" id="finalOvertakes">0</span></div>
+<div class="stat">Очки: <span class="big" id="finalScore">0</span></div>
+<div class="stat">Скорость: <span class="big" id="finalSpeed">0</span> км/ч</div>
+<div class="coin" style="margin-top:10px">+💰 <span id="earnedCoins">0</span></div>
+<button class="btn green" style="margin-top:14px" onclick="restartGame()">🔄 ЗАНОВО</button>
+<button class="btn blue" onclick="backToMenu()">🏠 В МЕНЮ</button>
+</div>
+
+</div>
+
+<script>
+// ===== АУДИО =====
+let AC=null,S=true,eO=null,eG=null;
+function initAudio(){if(AC)return;try{AC=new(window.AudioContext||window.webkitAudioContext)()}catch(e){S=false}}
+function beep(f,d,t="square",v=.1){if(!S||!AC)return;const o=AC.createOscillator(),g=AC.createGain();o.type=t;o.frequency.value=f;g.gain.setValueAtTime(v,AC.currentTime);g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+d);o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+d)}
+function startEngine(){if(!S||!AC||eO)return;eO=AC.createOscillator();eG=AC.createGain();eO.type="sawtooth";eO.frequency.value=60;eG.gain.value=.03;eO.connect(eG);eG.connect(AC.destination);eO.start()}
+function stopEngine(){if(eO){try{eO.stop()}catch(e){}eO=null;eG=null}}
+function updEngine(v){if(eO)eO.frequency.value=50+v*.4}
+
+// ===== МАШИНЫ =====
+const CARS=[
+{id:"toyota",name:"🚗 Старая Toyota",desc:"Стандартная",price:0,stats:{grip:1,accel:1,maxBonus:0,coinBonus:1},color:"#e94560",type:"sedan"},
+{id:"prius",name:"🌱 Toyota Prius",desc:"+30% монет",price:150,stats:{grip:1.1,accel:0.95,maxBonus:-10,coinBonus:1.3},color:"#2ecc71",type:"prius"},
+{id:"skyline",name:"🏁 Nissan Skyline GT-R",desc:"+25 км/ч, быстрая",price:400,stats:{grip:1.3,accel:1.2,maxBonus:25,coinBonus:1},color:"#3498db",type:"skyline"}
 ];
 
-// ВНЕДОРОЖЬЯ — отдельный магазин, меняют вид пикапа
-var OFFROADS=[
-{id:'pickup1',n:"Пикап",p:0,c:'#8b6f47',style:0},
-{id:'jeep',n:"Джип Wrangler",p:3000,c:'#2e7d32',style:1},
-{id:'landrover',n:"Land Rover",p:10000,c:'#455a64',style:1},
-{id:'toyota',n:"Toyota Hilux",p:25000,c:'#d32f2f',style:2},
-{id:'hummer',n:"Hummer H2",p:60000,c:'#4e342e',style:2},
-{id:'tank',n:"Внедорожник Танк",p:200000,c:'#33691e',style:3}
+const SHOP=[
+{id:"grip",name:"🛞 Спортивные шины",desc:"Плавнее управление",price:60,max:3},
+{id:"fuel",name:"⛽ Турбонаддув",desc:"+15 км/ч макс.",price:80,max:5},
+{id:"magnet",name:"💎 Драгоценный груз",desc:"+25% очков",price:100,max:3}
 ];
 
-var F1={n:"Red Bull F1",m:31,p:0,
-c:'#1a237e',ac:'#ffd600',t:2,isF1:true};var ACHS=[
-{id:'f1',n:"🎯 Первый обгон",d:"Обгони 1 машину",r:10,
-chk:function(s){return s.obgony>=1}},
-{id:'f10',n:"🚗 Разгон",d:"Обгони 10 машин",r:30,
-chk:function(s){return s.obgony>=10}},
-{id:'f25',n:"🏁 Гонщик",d:"Обгони 25 машин",r:60,
-chk:function(s){return s.obgony>=25}},
-{id:'f50',n:"💨 Спидстер",d:"Обгони 50 машин",r:100,
-chk:function(s){return s.obgony>=50}},
-{id:'f100',n:"🔥 Мастер",d:"Обгони 100 машин",r:200,
-chk:function(s){return s.obgony>=100}},
-{id:'c100',n:"💰 Сотня",d:"Заработай 100",r:20,
-chk:function(s){return s.sess>=100}},
-{id:'c500',n:"💵 Пятихатка",d:"Заработай 500",r:50,
-chk:function(s){return s.sess>=500}},
-{id:'c1000',n:"💎 Тысячник",d:"Заработай 1000",r:100,
-chk:function(s){return s.sess>=1000}},
-{id:'c5000',n:"👑 Богач",d:"Заработай 5000",r:250,
-chk:function(s){return s.sess>=5000}},
-{id:'buy3',n:"🔧 Коллекционер",d:"Купи 3 машины",r:50,
-chk:function(s){return s.owned.length>=3}},
-{id:'buy8',n:"🏆 Автолюб",d:"Купи 8 машин",r:150,
-chk:function(s){return s.owned.length>=8}},
-{id:'buyAll',n:"⭐ Гаражист",d:"Купи все машины",r:1000,
-chk:function(s){return s.owned.length>=17}},
-{id:'prius',n:"🌿 Эко-воин",d:"Купи Toyota Prius",r:100,
-chk:function(s){return s.owned.indexOf(3)>=0}},
-{id:'sky',n:"🇯🇵 JDM",d:"Купи Nissan Skyline",r:100,
-chk:function(s){return s.owned.indexOf(4)>=0}},
-{id:'sup',n:"🏎️ Суперкар",d:"Купи любой суперкар",r:200,
-chk:function(s){for(var i=0;i<s.owned.length;i++)
-if(CARS[s.owned[i]].t===2)return true;return false}},
-{id:'rbr',n:"🏁 Red Bull",d:"Купи болид в гараже",r:500,
-chk:function(s){return s.owned.indexOf(16)>=0}},
-{id:'f1ach',n:"🏁 Ф1-пилот",d:"Прокатись на болиде (админ)",r:300,
-chk:function(s){return s.f1Used||false}},
-{id:'jeep',n:"🚙 Джип",d:"Купи джип Wrangler",r:200,
-chk:function(s){return (s.ownedOff||[0]).indexOf(1)>=0}},
-{id:'tank',n:"🎯 Танк",d:"Купи внедорожник Танк",r:1000,
-chk:function(s){return (s.ownedOff||[0]).indexOf(5)>=0}},
-{id:'offr',n:"🚙 Внедорожник",d:"Проедь 500 м внедорожья",r:100,
-chk:function(s){return (s.offroadDist||0)>=500}},
-{id:'secret',n:"💎 Тайна кристаллов",d:"Найди секретную локацию",r:500,
-chk:function(s){return (s.secretFound||false)}},
-{id:'boss',n:"👁️ Победитель босса",d:"Проживи все 4 удара босса",r:1000,
-chk:function(s){return (s.bossBeaten||false)}},
-{id:'r1',n:"🥇 Рекордсмен",d:"Побей рекорд 5 раз",r:150,
-chk:function(s){return s.recBeats>=5}}
-];
-
-var S={coins:0,owned:[0],active:0,best:0,
-done:[],recBeats:0,clownCoins:0,toiletCoins:0,
-beanDone:false,offroadBest:0,offroadDist:0,f1Used:false,
-secretFound:false,bossBeaten:false,
-ownedOff:[0],activeOff:0};
-
-try{
-var d=JSON.parse(localStorage.getItem('obgon21')||'{}');
-if(d.S)for(var k in d.S)S[k]=d.S[k];
-}catch(e){}
-
-function save(){
-localStorage.setItem('obgon21',JSON.stringify({S:S}));
-}
-setInterval(save,5000);
-
-function $(id){return document.getElementById(id);}
-
-function fmt(n){
-if(!isFinite(n))return'∞';
-if(n<1000)return Math.floor(n)+'';
-if(n<1e6)return(n/1e3).toFixed(1)+'K';
-if(n<1e9)return(n/1e6).toFixed(1)+'M';
-if(n<1e12)return(n/1e9).toFixed(1)+'B';
-return(n/1e12).toFixed(1)+'T';
-}
-
-function toast(txt){
-var el=$('toast');
-el.textContent=txt;
-el.classList.add('on');
-setTimeout(function(){el.classList.remove('on')},2500);
-}
-
-function updateClownHud(){
-var h=$('clownHud');
-if(S.clownCoins>0){
-h.style.display='block';
-$('clownCount').textContent=S.clownCoins;
-}else h.style.display='none';
-var t=$('toiletHud');
-if(S.toiletCoins>0){
-t.style.display='block';
-$('toiletCount').textContent=S.toiletCoins;
-}else t.style.display='none';
-}
-
-function checkAch(st){
-var nd=false;
-for(var i=0;i<ACHS.length;i++){
-var a=ACHS[i];
-if(S.done.indexOf(a.id)>=0)continue;
-if(a.chk(st)){
-S.done.push(a.id);
-S.coins+=a.r;
-nd=true;
-toast('🏆 '+a.n+'\n+'+a.r+'💰');
-}
-}
-if(nd)save();
-return nd;
-   }function showMenu(){
-$('menu').classList.remove('h');
-$('garage').classList.add('h');
-$('over').classList.add('h');
-$('ach').classList.add('h');
-$('hud').classList.add('h');
-$('ctrl').classList.add('h');
-$('pedals').classList.add('h');
-$('pedals').style.display='none';
-$('hpBar').style.display='none';
-$('mc').textContent=fmt(S.coins);
-gameOn=false;
-gameMode='overtake';
-f1Mode=false;
-save();
-}
-
-var garTab='sport';
-function switchGarTab(t){
-garTab=t;
-$('tabSport').classList.toggle('act',t==='sport');
-$('tabOff').classList.toggle('act',t==='off');
-renderG();
-}
-
-function showGarage(){
-$('menu').classList.add('h');
-$('garage').classList.remove('h');
-renderG();
-}
-
-function showAch(){
-$('menu').classList.add('h');
-$('ach').classList.remove('h');
-renderA();
-}
-
-function renderA(){
-var al=$('al');
-al.innerHTML='';
-$('ac').textContent=fmt(S.coins);
-$('ap').textContent=S.done.length;
-for(var i=0;i<ACHS.length;i++){
-var a=ACHS[i];
-var done=S.done.indexOf(a.id)>=0;
-var div=document.createElement('div');
-div.className='ac'+(done?' done':'');
-div.innerHTML='<div class="i"><div class="n">'+
-a.n+'</div><div class="d">'+a.d+
-'</div></div><div class="rew">'+
-(done?'✓ ':'')+a.r+'💰</div>';
-al.appendChild(div);
-}
-}
-
-function renderG(){
-var g=$('gl');
-g.innerHTML='';
-$('gc').textContent=fmt(S.coins);
-if(garTab==='sport'){
-renderSport(g);
-}else{
-renderOff(g);
-}
-}
-
-function renderSport(g){
-for(var i=0;i<CARS.length;i++){
-var c=CARS[i];
-var own=S.owned.indexOf(i)>=0;
-var act=S.active===i;
-var div=document.createElement('div');
-div.className='cc'+(own?' on':'')+(act?' act':'');
-if(c.sale)div.className+=' saleCard';
-var nameHtml='<div class="n" style="color:'+c.c+'">'+c.n+'</div>';
-if(c.sale)nameHtml='<div class="n sale" style="display:inline-block;padding:2px 8px;border-radius:5px;font-size:14px">'+c.n+' 🎉 СУПЕР АКЦИЯ!</div>';
-div.innerHTML='<div class="i">'+nameHtml+
-'<div class="d">⭐ x'+c.m+' монет</div></div>';
-var b=document.createElement('button');
-if(act){b.textContent='✓';b.className='act';b.disabled=1;}
-else if(own){
-b.textContent='Выбрать';b.className='on';
-b.onclick=(function(idx){return function(){
-S.active=idx;save();renderG();
-};})(i);
-}else{
-if(c.sale){
-b.textContent=S.coins>=c.p?'🎉 '+fmt(c.p)+'💰':'🔒 '+fmt(c.p);
-b.className='sale';
-}else{
-b.textContent=S.coins>=c.p?fmt(c.p)+'💰':'🔒 '+fmt(c.p);
-}
-b.disabled=S.coins<c.p;
-b.onclick=(function(idx,pr){return function(){
-if(S.coins>=pr){
-S.coins-=pr;S.owned.push(idx);S.active=idx;
-save();renderG();
-toast('🚗 Куплено: '+CARS[idx].n);
-checkAch({obgony:0,sess:0,dist:0,
-owned:S.owned,recBeats:S.recBeats,
-clownCoins:S.clownCoins,
-toiletCoins:S.toiletCoins,
-f1Used:S.f1Used,offroadDist:S.offroadDist,
-secretFound:S.secretFound,bossBeaten:S.bossBeaten,
-ownedOff:S.ownedOff});
-}
-};})(i,c.p);
-}
-div.appendChild(b);g.appendChild(div);
-}
-}
-
-function renderOff(g){
-for(var i=0;i<OFFROADS.length;i++){
-var c=OFFROADS[i];
-var own=S.ownedOff.indexOf(i)>=0;
-var act=S.activeOff===i;
-var div=document.createElement('div');
-div.className='cc'+(own?' on':'')+(act?' act':'');
-var nameHtml='<div class="n" style="color:'+c.c+'">'+c.n+'</div>';
-div.innerHTML='<div class="i">'+nameHtml+
-'<div class="d">🚙 Внедорожник</div></div>';
-var b=document.createElement('button');
-if(act){b.textContent='✓';b.className='act';b.disabled=1;}
-else if(own){
-b.textContent='Выбрать';b.className='on';
-b.onclick=(function(idx){return function(){
-S.activeOff=idx;save();renderG();
-};})(i);
-}else{
-b.textContent=S.coins>=c.p?fmt(c.p)+'💰':'🔒 '+fmt(c.p);
-b.disabled=S.coins<c.p;
-b.onclick=(function(idx,pr){return function(){
-if(S.coins>=pr){
-S.coins-=pr;S.ownedOff.push(idx);S.activeOff=idx;
-save();renderG();
-toast('🚙 Куплено: '+OFFROADS[idx].n);
-checkAch({obgony:0,sess:0,dist:0,
-owned:S.owned,recBeats:S.recBeats,
-clownCoins:S.clownCoins,
-toiletCoins:S.toiletCoins,
-f1Used:S.f1Used,offroadDist:S.offroadDist,
-secretFound:S.secretFound,bossBeaten:S.bossBeaten,
-ownedOff:S.ownedOff});
-}
-};})(i,c.p);
-}
-div.appendChild(b);g.appendChild(div);
-}
-   }function openAdmin(){
-$('adminPass').value='';
-$('adminMsg').textContent='';
-$('admin').style.display='flex';
-}
-
-function checkAdmin(){
-var p=$('adminPass').value;
-if(p==='67Bean66Beanpisu'){
-$('adminMsg').textContent='✓ Доступ разрешён!';
-$('adminMsg').style.color='#4caf50';
-setTimeout(function(){showAdminPanel();},600);
-}else{
-$('adminMsg').textContent='✗ Неверный пароль';
-$('adminMsg').style.color='#ff5252';
-$('adminPass').value='';
-}
-}
-
-var f1Mode=false;
-
-function showAdminPanel(){
-var a=$('admin');
-a.innerHTML='<h2>⚙️ АДМИН-ПАНЕЛЬ</h2>'+
-'<button class="green" onclick="adminGive(10000)">+10 000 💰</button>'+
-'<button class="green" onclick="adminGive(1000000)">+1 000 000 💰</button>'+
-'<button class="green" onclick="adminUnlockAll()">🔓 Открыть все машины</button>'+
-'<button class="green" onclick="adminUnlockAch()">🏆 Открыть все достижения</button>'+
-'<button style="background:linear-gradient(180deg,#1a237e,#0d1456);color:#fff" onclick="adminStartF1()">🏁 СТАТЬ БОЛИДОМ RED BULL (x31)</button>'+
-'<button class="green" onclick="adminAddClown()">🤡 +1 Клоун</button>'+
-'<button class="green" onclick="adminAddToilet()">🚽 +1 Туалет</button>'+
-'<button onclick="adminReset()">🗑️ Сбросить</button>'+
-'<button class="bk" onclick="closeAdmin()">← Закрыть</button>'+
-'<div class="admin-ok" id="adminLog"></div>';
-}
-
-function adminStartF1(){
-f1Mode=true;
-S.f1Used=true;
-save();
-closeAdmin();
-start();
-}
-
-function adminGive(n){
-S.coins+=n;
-save();
-var log=$('adminLog');
-if(log)log.textContent='+'+n+' 💰 выдано';
-}
-
-function adminUnlockAll(){
-S.owned=[];
-for(var i=0;i<CARS.length;i++)S.owned.push(i);
-S.ownedOff=[];
-for(var j=0;j<OFFROADS.length;j++)S.ownedOff.push(j);
-save();
-var log=$('adminLog');
-if(log)log.textContent='Все машины открыты!';
-}
-
-function adminUnlockAch(){
-S.done=[];
-for(var i=0;i<ACHS.length;i++)S.done.push(ACHS[i].id);
-save();
-var log=$('adminLog');
-if(log)log.textContent='Все достижения открыты!';
-}
-
-function adminAddClown(){
-S.clownCoins=(S.clownCoins||0)+1;
-save();updateClownHud();
-var log=$('adminLog');
-if(log)log.textContent='+1 🤡';
-}
-
-function adminAddToilet(){
-S.toiletCoins=(S.toiletCoins||0)+1;
-save();updateClownHud();
-var log=$('adminLog');
-if(log)log.textContent='+1 🚽';
-}
-
-function adminReset(){
-if(!confirm('Точно сбросить ВСЁ?'))return;
-localStorage.removeItem('obgon21');
-location.reload();
-}
-
-function closeAdmin(){
-$('admin').style.display='none';
-}
-
-var mrbeanOn=false;
-function showMrBean(){
-if(mrbeanOn)return;
-mrbeanOn=true;
-var el=$('mrbean');
-var txt=$('mrbeanTxt');
-var ava=el.querySelector('.ava');
-var steps=[
-{who:'bean',msg:'всем привет!! Новый арбуз!!',d:2500},
-{act:function(){
-skibidiMode=true;
-sizeBoost=true;
-noEnemies=true;
-enemies=[];
-setTimeout(function(){
-skibidiMode=false;
-sizeBoost=false;
-noEnemies=false;
-},4000);
-},d:2500},
-{who:'tementiy',msg:'Мяв!!!',d:2500},
-{act:function(){
-S.coins+=50;
-if(gameOn)coins+=50;
-save();
-toast('+50 💰 от TEMENTIY 🐱');
-},d:800},
-{who:'bean',msg:'Пока!!',d:2000},
-{act:function(){
-el.classList.remove('show');
-S.coins+=200;
-if(gameOn)coins+=200;
-S.beanDone=true;
-save();
-toast('+200 💰 от MR BEAN!');
-mrbeanOn=false;
-},d:500}
-];
-el.classList.add('show');
-var idx=0;
-function nextStep(){
-if(idx>=steps.length)return;
-var s=steps[idx++];
-if(s.who){
-if(s.who==='bean'){ava.textContent='😎';txt.textContent='MR BEAN: '+s.msg;}
-else if(s.who==='deep'){ava.textContent='🐉';txt.textContent='DEEPSEEK: '+s.msg;}
-else{ava.textContent='🐱';txt.textContent='TEMENTIY: '+s.msg;}
-}
-if(s.act)s.act();
-setTimeout(nextStep,s.d);
-}
-nextStep();
-}
-
-function showMrBeanSecret(){
-var el=$('mrbean');
-var txt=$('mrbeanTxt');
-var ava=el.querySelector('.ava');
-ava.textContent='😎';
-txt.textContent='MR BEAN: Это место скрывает что то, будь аккуратен.';
-el.classList.add('show');
-setTimeout(function(){
-el.classList.remove('show');
-},3500);
-}var P=null;
-var enemies=[];
-var lines=[];
-var coins=0;
-var sess=0;
-var dist=0;
-var speed=0;
-var gameOn=false;
-var gameMode='overtake';
-var obgony=0;
-var inp={l:0,r:0};
-var timeOfDay=0.3;
-var bgOff=0;
-var floats=[];
-var checkTimer=0;
-var lastRec=0;
-var rainbowHue=0;
-
-var rainbowMode=false;
-var beanBonus=false;
-var noEnemies=false;
-var sizeBoost=false;
-var skibidiMode=false;
-
-var pits=[];
-var offroadSpeed=3;
-var offroadPitsPassed=0;
-
-var secretActive=false;
-var secretTimer=0;
-var secretPhase=0;
-var playerHP=100;
-var boss={};
-var bossHitCount=0;
-var bossTimer=0;
-var bossZone={x:0,y:0,r:0,active:false,hitTime:0,hit:false};
-var crystals=[];
-var secretDist=0;
-var hitFlash=0;
-
-function start(){
-$('menu').classList.add('h');
-$('garage').classList.add('h');
-$('over').classList.add('h');
-$('ach').classList.add('h');
-$('hud').classList.remove('h');
-$('ctrl').classList.remove('h');
-$('pedals').classList.add('h');
-$('pedals').style.display='none';
-$('hpBar').style.display='none';
-resize();
-init();
-gameOn=true;
-gameMode='overtake';
-}
-
-function startOffroad(){
-$('menu').classList.add('h');
-$('garage').classList.add('h');
-$('over').classList.add('h');
-$('ach').classList.add('h');
-$('hud').classList.remove('h');
-$('ctrl').classList.remove('h');
-$('pedals').classList.remove('h');
-$('pedals').style.display='flex';
-$('hpBar').style.display='none';
-resize();
-initOffroad();
-gameOn=true;
-gameMode='offroad';
-f1Mode=false;
-}
-
-function init(){
-P={x:W/2,y:H-160,
-w:Math.min(46,W*0.1),
-h:Math.min(80,W*0.18),
-vx:0};
-enemies=[];lines=[];
-coins=0;sess=0;dist=0;speed=0;obgony=0;
-for(var i=0;i<12;i++)lines.push({y:i*80-80});
-for(var j=0;j<2;j++)spawnNormalBot(-250-j*250);
-lastRec=S.best;
-}
-
-function initOffroad(){
-P={x:W/2,y:H-160,
-w:Math.min(46,W*0.1),
-h:Math.min(90,W*0.2),
-vx:0};
-pits=[];lines=[];
-coins=0;sess=0;dist=0;speed=0;
-offroadSpeed=3;
-offroadPitsPassed=0;
-secretActive=false;
-secretPhase=0;
-playerHP=100;
-for(var i=0;i<10;i++)lines.push({y:i*70-70});
-for(var j=0;j<5;j++)spawnPit(-200-j*180);
-}
-
-function spawnPit(y){
-var rw=W*0.75;
-var rx=(W-rw)/2;
-var x=rx+30+Math.random()*(rw-60);
-var r=25+Math.random()*15;
-var purple=(dist>=1000)&&Math.random()<0.2;
-pits.push({x:x,y:y!==undefined?y:-150,r:r,passed:false,purple:purple});
-}
-
-function spawnNormalBot(y){
-if(noEnemies)return;
-var rw=W*0.65;
-var rx=(W-rw)/2;
-var l=2;
-var laneW=rw/3;
-var x=rx+laneW*l+laneW*0.5;
-var cs=['#e53935','#43a047','#1e88e5',
-'#fb8c00','#8e24aa','#00acc1','#d81b60'];
-var ts=[0,1,2,4];
-enemies.push({
-x:x,y:y!==undefined?y:-150,
-w:P.w,h:P.h,
-c:cs[Math.floor(Math.random()*cs.length)],
-s:2+Math.random()*1.5,
-pass:0,
-t:ts[Math.floor(Math.random()*ts.length)],
-skibidi:false,
-lane:l,targetLane:l,
-turnTimer:1+Math.random()*2,
-warningTimer:0,warningActive:false,turnCooldown:0,
-fromAhead:false
-});
-}
-
-function spawnAheadBot(){
-if(noEnemies)return;
-var rw=W*0.65;
-var rx=(W-rw)/2;
-var l=Math.random()<0.5?0:1;
-var laneW=rw/3;
-var x=rx+laneW*l+laneW*0.5;
-var cs=['#e53935','#43a047','#1e88e5',
-'#fb8c00','#8e24aa','#00acc1','#d81b60'];
-var ts=[0,1,2,4];
-var spawnY=P.y-280-Math.random()*50;
-enemies.push({
-x:x,y:spawnY,
-w:P.w,h:P.h,
-c:cs[Math.floor(Math.random()*cs.length)],
-s:2+Math.random()*1.5,
-pass:0,
-t:ts[Math.floor(Math.random()*ts.length)],
-skibidi:false,
-lane:l,targetLane:l,
-turnTimer:99,
-warningTimer:0,warningActive:false,turnCooldown:99,
-fromAhead:true
-});
-}
-
-function bind(el,k){
-var on=function(e){e.preventDefault();inp[k]=1;el.classList.add('on');};
-var off=function(e){e.preventDefault();inp[k]=0;el.classList.remove('on');};
-el.addEventListener('touchstart',on,{passive:false});
-el.addEventListener('touchend',off,{passive:false});
-el.addEventListener('touchcancel',off,{passive:false});
-el.addEventListener('mousedown',on);
-el.addEventListener('mouseup',off);
-el.addEventListener('mouseleave',off);
-}
-
-function update(dt){
-if(!gameOn||!P)return;
-timeOfDay=(timeOfDay+dt/60)%1;
-rainbowHue=(rainbowHue+dt*200)%360;
-if(gameMode==='overtake')updateOvertake(dt);
-else if(gameMode==='offroad')updateOffroad(dt);
-else if(gameMode==='secret')updateSecret(dt);
-   }function updateOvertake(dt){
-if(inp.l)P.vx-=0.8;
-if(inp.r)P.vx+=0.8;
-P.vx*=0.85;
-if(P.vx>8)P.vx=8;
-if(P.vx<-8)P.vx=-8;
-P.x+=P.vx;
-
-var rw=W*0.65;
-var rx=(W-rw)/2;
-var mn=rx+P.w/2;
-var mx=rx+rw-P.w/2;
-if(P.x<mn){P.x=mn;P.vx=0;}
-if(P.x>mx){P.x=mx;P.vx=0;}
-
-for(var i=0;i<lines.length;i++){
-lines[i].y+=7;
-if(lines[i].y>H+40)lines[i].y=-40;
-}
-bgOff+=7;
-
-var canTurn=dist>=300;
-
-for(i=0;i<enemies.length;i++){
-var e=enemies[i];
-e.y+=e.s;
-
-if(canTurn&&!e.pass&&!e.fromAhead){
-var playerNear=Math.abs(e.y-P.y)<180&&Math.abs(e.x-P.x)<150;
-e.turnTimer-=dt;
-e.turnCooldown-=dt;
-
-if(playerNear&&!e.warningActive){
-e.turnTimer=Math.max(e.turnTimer,0.5);
-}
-
-if(e.turnTimer<=0&&e.turnCooldown<=0&&!playerNear){
-var newLane=1+Math.floor(Math.random()*2);
-if(newLane!==e.lane){
-e.targetLane=newLane;
-e.warningActive=true;
-e.warningTimer=0.7;
-e.turnTimer=2+Math.random()*2;
-}
-}
-
-if(e.warningActive){
-e.warningTimer-=dt;
-if(e.warningTimer<=0){
-e.warningActive=false;
-e.lane=e.targetLane;
-e.turnCooldown=1.5;
-}
-}
-
-var lw=rw/3;
-var targetX=rx+lw*e.targetLane+lw*0.5;
-e.x+=(targetX-e.x)*0.06;
-}
-
-if(Math.abs(e.x-P.x)<P.w-6&&Math.abs(e.y-P.y)<P.h-6){
-gameOn=false;crash('overtake');return;
-}
-if(!e.pass&&e.y>P.y+P.h/2){
-e.pass=1;obgony++;
-var mult=CARS[S.active].m;
-if(f1Mode)mult=F1.m;
-if(beanBonus)mult*=2;
-var g=Math.floor(10*mult);
-coins+=g;sess+=g;
-floats.push({t:'+'+g,x:e.x,y:e.y,l:1});
-}
-}
-
-enemies=enemies.filter(function(e){return e.y<H+200;});
-
-if(!noEnemies){
-if(enemies.length<5&&Math.random()<0.02)spawnNormalBot();
-if(dist>=100&&Math.random()<0.015)spawnAheadBot();
-}
-
-dist+=1.4;
-speed=Math.floor(180+Math.abs(P.vx)*20);
-
-$('coins').textContent=fmt(S.coins+coins);
-$('mult').textContent='x'+(f1Mode?F1.m:CARS[S.active].m);
-$('spd').textContent=speed;
-
-checkTimer+=dt;
-if(checkTimer>0.5){
-checkTimer=0;
-checkAch({obgony:obgony,sess:sess,dist:dist,
-owned:S.owned,recBeats:S.recBeats,
-clownCoins:S.clownCoins,toiletCoins:S.toiletCoins,
-f1Used:S.f1Used,offroadDist:S.offroadDist,
-secretFound:S.secretFound,bossBeaten:S.bossBeaten,
-ownedOff:S.ownedOff});
-}
-}function updateOffroad(dt){
-if(inp.l)P.vx-=0.9;
-if(inp.r)P.vx+=0.9;
-P.vx*=0.85;
-if(P.vx>9)P.vx=9;
-if(P.vx<-9)P.vx=-9;
-P.x+=P.vx;
-
-var rw=W*0.75;
-var rx=(W-rw)/2;
-var mn=rx+P.w/2;
-var mx=rx+rw-P.w/2;
-if(P.x<mn){P.x=mn;P.vx=0;}
-if(P.x>mx){P.x=mx;P.vx=0;}
-
-if(inp.gas)offroadSpeed+=0.15;
-if(inp.brk)offroadSpeed-=0.3;
-if(!inp.gas&&!inp.brk)offroadSpeed-=0.03;
-if(offroadSpeed<1)offroadSpeed=1;
-if(offroadSpeed>12)offroadSpeed=12;
-
-for(var i=0;i<lines.length;i++){
-lines[i].y+=offroadSpeed;
-if(lines[i].y>H+40)lines[i].y=-40;
-}
-bgOff+=offroadSpeed;
-
-for(i=0;i<pits.length;i++){
-var pit=pits[i];
-pit.y+=offroadSpeed;
-var dx=P.x-pit.x;
-var dy=P.y-pit.y;
-var d=Math.sqrt(dx*dx+dy*dy);
-if(d<pit.r-5){
-if(pit.purple){
-teleportToSecret();
-return;
-}else{
-gameOn=false;crash('offroad');return;
-}
-}
-if(!pit.passed&&pit.y>P.y+20){
-pit.passed=true;
-offroadPitsPassed++;
-var g=Math.floor(15*CARS[S.active].m);
-coins+=g;sess+=g;
-floats.push({t:'+'+g,x:pit.x,y:pit.y,l:1});
-}
-}
-
-pits=pits.filter(function(p){return p.y<H+100;});
-if(pits.length<5&&Math.random()<0.05)spawnPit(-150);
-
-dist+=offroadSpeed/8;
-speed=Math.floor(offroadSpeed*15);
-
-$('coins').textContent=fmt(S.coins+coins);
-$('mult').textContent='x'+CARS[S.active].m;
-$('spd').textContent=speed;
-
-checkTimer+=dt;
-if(checkTimer>0.5){
-checkTimer=0;
-checkAch({obgony:0,sess:sess,dist:dist,
-owned:S.owned,recBeats:S.recBeats,
-clownCoins:S.clownCoins,toiletCoins:S.toiletCoins,
-f1Used:S.f1Used,offroadDist:S.offroadDist,
-secretFound:S.secretFound,bossBeaten:S.bossBeaten,
-ownedOff:S.ownedOff});
-}
-}
-
-function teleportToSecret(){
-secretActive=true;
-secretPhase=0;
-secretTimer=0;
-playerHP=100;
-bossHitCount=0;
-bossTimer=0;
-gameMode='secret';
-S.secretFound=true;
-save();
-P.x=W/2;
-P.vx=0;
-crystals=[];
-var rw=W*0.6;
-var rx=(W-rw)/2;
-for(var i=0;i<14;i++){
-crystals.push({
-x:rx-40+Math.random()*(rw+80),
-y:-200-i*180-Math.random()*100,
-size:20+Math.random()*20,
-hue:260+Math.random()*40,
-passed:false
-});
-}
-$('hpBar').style.display='block';
-updateHPBar();
-}
-
-function updateHPBar(){
-$('hpFill').style.width=playerHP+'%';
-$('hpText').textContent=playerHP+' / 100';
-if(playerHP<=50)$('hpFill').style.background='linear-gradient(90deg,#ff9800,#ffc107)';
-if(playerHP<=0)$('hpFill').style.background='#e53935';
-if(playerHP>50)$('hpFill').style.background='linear-gradient(90deg,#4caf50,#8bc34a)';
-}function updateSecret(dt){
-secretTimer+=dt;
-secretDist+=6;
-
-if(inp.l)P.vx-=0.9;
-if(inp.r)P.vx+=0.9;
-P.vx*=0.85;
-if(P.vx>9)P.vx=9;
-if(P.vx<-9)P.vx=-9;
-P.x+=P.vx;
-var rw=W*0.7;
-var rx=(W-rw)/2;
-var mn=rx+P.w/2;
-var mx=rx+rw-P.w/2;
-if(P.x<mn){P.x=mn;P.vx=0;}
-if(P.x>mx){P.x=mx;P.vx=0;}
-
-for(var i=0;i<crystals.length;i++){
-crystals[i].y+=6;
-if(crystals[i].y>H+200){
-crystals[i].y=-200;
-}
-}
-bgOff+=6;
-
-if(hitFlash>0)hitFlash-=dt*3;
-
-if(secretPhase===0){
-if(secretTimer>=2){
-secretPhase=1;
-secretTimer=0;
-showMrBeanSecret();
-}
-}
-else if(secretPhase===1){
-if(secretTimer>=3.5){
-secretPhase=2;
-secretTimer=0;
-bossTimer=0;
-bossHitCount=0;
-boss={x:W/2,y:H*0.3,size:80,eyeTime:0};
-scheduleBossAttack();
-}
-}
-else if(secretPhase===2){
-bossTimer+=dt;
-boss.eyeTime+=dt*3;
-
-if(bossZone.active){
-bossZone.hitTime+=dt;
-if(bossZone.hitTime>=0.7&&!bossZone.hit){
-bossZone.hit=true;
-var dx=P.x-bossZone.x;
-var dy=P.y-bossZone.y;
-var d=Math.sqrt(dx*dx+dy*dy);
-if(d<bossZone.r){
-playerHP-=50;
-hitFlash=1;
-updateHPBar();
-if(playerHP<=0){
-playerHP=0;
-updateHPBar();
-secretPhase=99;
-gameOn=false;
-setTimeout(function(){showDefeat();},800);
-return;
-}
-}
-}
-if(bossZone.hitTime>=1.0){
-bossZone.active=false;
-bossHitCount++;
-if(bossHitCount>=4){
-secretPhase=3;
-secretTimer=0;
-setTimeout(function(){exitSecret();},800);
-}else{
-setTimeout(function(){
-if(secretPhase===2)scheduleBossAttack();
-},1000);
-}
-}
-}
-}
-else if(secretPhase===3){
-if(secretTimer>=0.5){
-exitSecret();
-}
-}
-
-$('coins').textContent=fmt(S.coins+coins);
-$('mult').textContent='x'+CARS[S.active].m;
-$('spd').textContent=Math.floor(secretDist/50);
-
-checkTimer+=dt;
-if(checkTimer>0.5){
-checkTimer=0;
-checkAch({obgony:0,sess:sess,dist:dist,
-owned:S.owned,recBeats:S.recBeats,
-clownCoins:S.clownCoins,toiletCoins:S.toiletCoins,
-f1Used:S.f1Used,offroadDist:S.offroadDist,
-secretFound:S.secretFound,bossBeaten:S.bossBeaten,
-ownedOff:S.ownedOff});
-}
-}
-
-function scheduleBossAttack(){
-var rw=W*0.7;
-var rx=(W-rw)/2;
-var zones=[rx+rw*0.17,rx+rw*0.5,rx+rw*0.83];
-var safeIdx=Math.floor(Math.random()*3);
-var attackZones=[];
-for(var i=0;i<3;i++){
-if(i!==safeIdx)attackZones.push(zones[i]);
-}
-var zx=attackZones[Math.floor(Math.random()*attackZones.length)];
-bossZone={
-x:zx,
-y:H-140,
-r:W*0.22,
-active:true,
-hit:false,
-hitTime:0
+// ===== СОСТОЯНИЕ =====
+const cv=document.getElementById("road"),ctx=cv.getContext("2d"),W=cv.width,H=cv.height;
+let best=+localStorage.getItem("otB")||0,coins=+localStorage.getItem("otC")||0;
+let up=JSON.parse(localStorage.getItem("otU")||'{"grip":0,"fuel":0,"magnet":0,"car":"toyota"}');
+if(!up.car)up.car="toyota";
+let stats=JSON.parse(localStorage.getItem("otStats")||'{"totalGames":0,"totalOvertakes":0,"totalCoins":0,"oncomingBest":0,"overtakeBest":0,"crashes":0}');
+let mode="overtake";
+
+function getCar(){return CARS.find(c=>c.id===up.car)||CARS[0]}
+function save(){localStorage.setItem("otC",coins);localStorage.setItem("otU",JSON.stringify(up));document.getElementById("menuCoins").textContent=coins;document.getElementById("shopCoins").textContent=coins;document.getElementById("adminCoins").textContent=coins}
+function saveStats(){localStorage.setItem("otStats",JSON.stringify(stats))}
+
+// ===== ЭКРАНЫ =====
+function showScreen(id){
+document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+document.getElementById(id).classList.add("active");
+document.getElementById("menuCoins").textContent=coins;
+if(id==="scMenu"){
+stopEngine();
+}
+}
+
+// ===== СТАТИСТИКА =====
+function renderStats(){
+const t=document.getElementById("statsTable");
+t.innerHTML=`
+<div class="stats-row"><span>🎮 Всего игр</span><span class="val">${stats.totalGames}</span></div>
+<div class="stats-row"><span>🚗 Обгонов всего</span><span class="val">${stats.totalOvertakes}</span></div>
+<div class="stats-row"><span>💰 Монет заработано</span><span class="val">${stats.totalCoins}</span></div>
+<div class="stats-row"><span>💥 Аварий</span><span class="val">${stats.crashes}</span></div>
+<div class="stats-row"><span>🏁 Рекорд в Встречке</span><span class="val">${stats.oncomingBest}</span></div>
+<div class="stats-row"><span>🏆 Рекорд в Обгоне</span><span class="val">${best}</span></div>
+<div class="stats-row"><span>🚗 Текущая машина</span><span class="val">${getCar().name}</span></div>
+<div class="stats-row"><span>🛞 Шины ур.</span><span class="val">${up.grip||0}/3</span></div>
+<div class="stats-row"><span>⛽ Турбо ур.</span><span class="val">${up.fuel||0}/5</span></div>
+<div class="stats-row"><span>💎 Груз ур.</span><span class="val">${up.magnet||0}/3</span></div>
+`;
+}
+
+// ===== МАГАЗИН =====
+function openShop(){showScreen("scShop");renderShop()}
+function renderShop(){
+const L=document.getElementById("shopList");L.innerHTML="";
+const t1=document.createElement("div");t1.className="section-title";t1.textContent="⚙ УЛУЧШЕНИЯ";L.appendChild(t1);
+SHOP.forEach(it=>{
+const lv=up[it.id]||0,mx=lv>=it.max,ok=!mx&&coins>=it.price;
+const d=document.createElement("div");d.className="shop-item"+(mx?" bought":"");
+d.innerHTML=`<div class="info"><div class="name">${it.name} <span style="color:#f39c12">ур. ${lv}/${it.max}</span></div><div class="desc">${it.desc}</div></div><button ${ok?"":"disabled"}>${mx?"МАКС":`💰 ${it.price}`}</button>`;
+if(ok)d.querySelector("button").onclick=()=>buyUp(it);
+L.appendChild(d)});
+const t2=document.createElement("div");t2.className="section-title";t2.textContent="🚗 МАШИНЫ";L.appendChild(t2);
+CARS.forEach(c=>{
+const owned=up.car===c.id,canBuy=!owned&&coins>=c.price;
+const d=document.createElement("div");d.className="shop-item"+(owned?" owned":"");
+const s=c.stats;
+let btnTxt=owned?"✓ ВЫБРАНА":(c.price===0?"ВЫБРАТЬ":`💰 ${c.price}`);
+d.innerHTML=`<div class="info"><div class="name">${c.name}</div><div class="desc">${c.desc}<br><span style="color:#6cf">+${s.maxBonus} км/ч · ×${s.grip} руль · ×${s.coinBonus} монет</span></div></div><button ${(!owned&&c.price>0&&!canBuy)?"disabled":""}>${btnTxt}</button>`;
+const btn=d.querySelector("button");
+if(owned)btn.disabled=true;
+else if(c.price===0||canBuy)btn.onclick=()=>buyCar(c);
+L.appendChild(d)});
+}
+function buyUp(it){const lv=up[it.id]||0;if(lv>=it.max||coins<it.price)return;coins-=it.price;up[it.id]=lv+1;save();beep(660,.1,"sine",.1);setTimeout(()=>beep(990,.15,"sine",.1),80);renderShop()}
+function buyCar(c){if(up.car===c.id)return;if(c.price>0){if(coins<c.price)return;coins-=c.price}up.car=c.id;save();beep(660,.1,"sine",.1);setTimeout(()=>beep(990,.15,"sine",.1),80);setTimeout(()=>beep(1320,.2,"sine",.1),160);renderShop()}
+
+// ===== АДМИН =====
+const ADMIN_PASS="BeanNewgeme3";
+function openAdminLogin(){beep(440,.05);document.getElementById("adminLogin").classList.remove("hidden");document.getElementById("adminPass").value="";document.getElementById("adminError").textContent="";setTimeout(()=>document.getElementById("adminPass").focus(),100)}
+function checkPass(){const v=document.getElementById("adminPass").value;if(v===ADMIN_PASS){beep(880,.1,"sine",.1);setTimeout(()=>beep(1320,.15,"sine",.1),80);document.getElementById("adminLogin").classList.add("hidden");document.getElementById("adminPanel").classList.remove("hidden");document.getElementById("adminCoins").textContent=coins}else{beep(200,.2,"sawtooth",.15);document.getElementById("adminError").textContent="❌ НЕВЕРНЫЙ ПАРОЛЬ";document.getElementById("adminPass").value=""}}
+function closeAdmin(){beep(440,.05);document.getElementById("adminLogin").classList.add("hidden");document.getElementById("adminPanel").classList.add("hidden")}
+function addCoins(n){coins+=n;save();beep(660,.08,"sine",.1)}
+function giveCar(id){up.car=id;save();beep(660,.1,"sine",.1)}
+function maxUpgrades(){up.grip=3;up.fuel=5;up.magnet=3;save();beep(660,.1,"sine",.1);setTimeout(()=>beep(1320,.2,"sine",.1),100)}
+function resetProgress(){if(!confirm("Сбросить ВЕСЬ прогресс?"))return;localStorage.clear();location.reload()}
+
+// ===== ИГРА =====
+let g=null;
+function startMode(m){
+mode=m;
+startGame();
+}
+function startGame(){
+initAudio();
+document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+document.getElementById("scGame").classList.add("active");
+document.getElementById("gameover").classList.add("hidden");
+document.getElementById("controls").classList.remove("hide");
+const car=getCar(),s=car.stats;
+g={
+run:1,
+mode:mode,
+p:{x:W/2,y:H-110,w:40,h:66,sp:5.5*(1+(up.grip||0)*0.08)*s.grip,tx:W/2,ti:0,color:car.color,type:car.type},
+cars:[],sc:0,ov:0,spd:60,bs:4*s.accel,ms:(200+(up.fuel||0)*15+s.maxBonus),
+st:0,si:70,k:{l:0,r:0},sh:0,mg:(1+(up.magnet||0)*0.25)*s.coinBonus,rs:0
 };
+setup();startEngine();loop();
+}
+function restartGame(){startGame()}
+function backToMenu(){if(g)g.run=0;stopEngine();document.getElementById("gameover").classList.add("hidden");document.getElementById("controls").classList.add("hide");showScreen("scMenu")}
+
+function setup(){
+const pL=e=>{e.preventDefault();if(g)g.k.l=1},pR=e=>{e.preventDefault();if(g)g.k.r=1},rL=e=>{e.preventDefault();if(g)g.k.l=0},rR=e=>{e.preventDefault();if(g)g.k.r=0};
+const bL=document.getElementById("btnLeft"),bR=document.getElementById("btnRight");
+const nL=bL.cloneNode(true),nR=bR.cloneNode(true);
+bL.parentNode.replaceChild(nL,bL);bR.parentNode.replaceChild(nR,bR);
+nL.addEventListener("touchstart",pL);nL.addEventListener("touchend",rL);nL.addEventListener("mousedown",pL);nL.addEventListener("mouseup",rL);nL.addEventListener("mouseleave",rL);
+nR.addEventListener("touchstart",pR);nR.addEventListener("touchend",rR);nR.addEventListener("mousedown",pR);nR.addEventListener("mouseup",rR);nR.addEventListener("mouseleave",rR);
+let tx=null;cv.ontouchstart=e=>tx=e.touches[0].clientX;
+cv.ontouchmove=e=>{if(tx===null||!g)return;const d=e.touches[0].clientX-tx;g.p.tx=Math.max(70,Math.min(W-70,g.p.tx+d*.8));tx=e.touches[0].clientX};
+cv.ontouchend=()=>tx=null;
+document.onkeydown=e=>{if(!g)return;if(e.key==="ArrowLeft"||e.key==="a")g.k.l=1;if(e.key==="ArrowRight"||e.key==="d")g.k.r=1};
+document.onkeyup=e=>{if(!g)return;if(e.key==="ArrowLeft"||e.key==="a")g.k.l=0;if(e.key==="ArrowRight"||e.key==="d")g.k.r=0};
 }
 
-function exitSecret(){
-gameMode='offroad';
-secretActive=false;
-playerHP=100;
-$('hpBar').style.display='none';
-P.x=W/2;
-P.y=H-160;
-P.vx=0;
-offroadSpeed=3;
-pits=[];
-for(var i=0;i<5;i++)spawnPit(-200-i*180);
-bossZone={active:false};
-S.coins+=100;
-coins+=100;
-S.bossBeaten=true;
-save();
-toast('+100 💰 за выход из локации!');
-checkAch({obgony:0,sess:sess,dist:dist,
-owned:S.owned,recBeats:S.recBeats,
-clownCoins:S.clownCoins,toiletCoins:S.toiletCoins,
-f1Used:S.f1Used,offroadDist:S.offroadDist,
-secretFound:S.secretFound,bossBeaten:S.bossBeaten,
-ownedOff:S.ownedOff});
-}
+function loop(){if(!g||!g.run)return;update();draw();requestAnimationFrame(loop)}
 
-function showDefeat(){
-$('over').classList.remove('h');
-$('over').querySelector('h1').textContent='☠️ ПОРАЖЕНИЕ';
-$('fc').textContent=fmt(coins);
-$('fo').textContent='BOSS';
-$('fd').textContent=Math.floor(dist);
-$('hud').classList.add('h');
-$('ctrl').classList.add('h');
-$('pedals').classList.add('h');
-$('pedals').style.display='none';
-$('hpBar').style.display='none';
-}
-
-function crash(mode){
-S.coins+=coins;
-var newRec=false;
-if(mode==='overtake'){
-if(coins>S.best){S.best=coins;newRec=true;}
-if(newRec&&lastRec>0)S.recBeats++;
-f1Mode=false;
+function update(){
+const x=g;
+x.spd=Math.min(x.ms,60+x.ov*3);
+const sf=x.bs+(x.spd-60)*.025;
+x.rs=(x.rs+sf*3)%60;
+if(x.k.l)x.p.tx-=x.p.sp;if(x.k.r)x.p.tx+=x.p.sp;
+x.p.tx=Math.max(70,Math.min(W-70,x.p.tx));
+x.p.x+=(x.p.tx-x.p.x)*.25;x.p.ti=(x.p.tx-x.p.x)*.05;
+x.st++;
+if(x.st>x.si){x.st=0;x.si=Math.max(30,70-x.ov*1.5);spawn()}
+x.cars.forEach(c=>{
+if(x.mode==="oncoming"){
+c.y+=sf*c.rs*1.8;
 }else{
-if(dist>S.offroadBest)S.offroadBest=Math.floor(dist);
-if(dist>S.offroadDist)S.offroadDist=Math.floor(dist);
+c.y+=sf*c.rs;
 }
-save();
-checkAch({obgony:obgony,sess:sess,dist:dist,
-owned:S.owned,recBeats:S.recBeats,
-clownCoins:S.clownCoins,toiletCoins:S.toiletCoins,
-f1Used:S.f1Used,offroadDist:S.offroadDist,
-secretFound:S.secretFound,bossBeaten:S.bossBeaten,
-ownedOff:S.ownedOff});
-$('over').classList.remove('h');
-$('over').querySelector('h1').textContent='💥 АВАРИЯ';
-$('fc').textContent=fmt(coins);
-$('fo').textContent=mode==='overtake'?obgony:offroadPitsPassed;
-$('fd').textContent=Math.floor(dist);
-$('hud').classList.add('h');
-$('ctrl').classList.add('h');
-$('pedals').classList.add('h');
-$('pedals').style.display='none';
-$('hpBar').style.display='none';
-}
-
-function restartMode(){
-if(gameMode==='overtake')start();
-else startOffroad();
-   }function mix(a,b,k){
-var pa=[parseInt(a.slice(1,3),16),
-parseInt(a.slice(3,5),16),
-parseInt(a.slice(5,7),16)];
-var pb=[parseInt(b.slice(1,3),16),
-parseInt(b.slice(3,5),16),
-parseInt(b.slice(5,7),16)];
-return'rgb('+
-Math.round(pa[0]+(pb[0]-pa[0])*k)+','+
-Math.round(pa[1]+(pb[1]-pa[1])*k)+','+
-Math.round(pa[2]+(pb[2]-pa[2])*k)+')';
-}
-
-function sky(){
-var t=timeOfDay;
-if(t<0.15)return'#0a0a2a';
-if(t<0.3)return mix('#0a0a2a','#ff6b35',(t-0.15)/0.15);
-if(t<0.45)return mix('#ff6b35','#87ceeb',(t-0.3)/0.15);
-if(t<0.75)return'#87ceeb';
-if(t<0.9)return mix('#87ceeb','#ff6b35',(t-0.75)/0.15);
-return mix('#ff6b35','#0a0a2a',(t-0.9)/0.1);
-}
-
-function isNight(){return timeOfDay<0.15||timeOfDay>0.85;}
-function isEve(){return timeOfDay>0.75&&timeOfDay<0.9;}
-
-function rainbowColor(offset){
-return 'hsl('+((rainbowHue+offset)%360)+',100%,55%)';
-}
-
-function drawCity(){
-var rw=W*0.65;
-var rx=(W-rw)/2;
-var bw=60,gap=90;
-var sh=(bgOff*0.5)%gap;
-for(var side=0;side<2;side++){
-var baseX=side===0?0:rx+rw;
-for(var i=-2;i<H/gap+2;i++){
-var by=i*gap+sh-gap;
-var h=80+((i*31+side*7)%40);
-var cols1=['#3a3a45','#4a3a2a','#2a3a4a'];
-var cols2=['#4a3a2a','#3a3a45','#5a3a3a'];
-var col=side===0?cols1[(i+side)%3]:cols2[(i+side)%3];
-ctx.fillStyle='rgba(0,0,0,.4)';
-ctx.fillRect(baseX+4,by+4,bw-4,h);
-ctx.fillStyle=col;
-ctx.fillRect(baseX,by,bw-4,h);
-var wr2=Math.floor(h/18);
-for(var r=0;r<wr2;r++){
-for(var c=0;c<2;c++){
-var wx=baseX+10+c*22;
-var wy=by+8+r*18;
-var lit=false;
-if(isNight())lit=((i*17+r*7+c*3+side*11)%10)>4;
-else if(isEve())lit=((i*17+r*7+c*3+side*11)%10)>7;
-if(lit){
-ctx.fillStyle='rgba(255,220,120,.9)';
-ctx.fillRect(wx,wy,14,10);
-}else{
-ctx.fillStyle='rgba(20,25,40,.9)';
-ctx.fillRect(wx,wy,14,10);
-}
-}
-}
-ctx.fillStyle='rgba(0,0,0,.3)';
-ctx.fillRect(baseX,by,bw-4,5);
-}
-}
-ctx.fillStyle=timeOfDay>0.5?'#3a3a3e':'#4a4a4e';
-ctx.fillRect(rx-30,0,30,H);
-ctx.fillRect(rx+rw,0,30,H);
-ctx.strokeStyle='rgba(255,255,255,.15)';
-ctx.setLineDash([8,8]);
-ctx.lineWidth=2;
-ctx.beginPath();ctx.moveTo(rx-8,0);ctx.lineTo(rx-8,H);ctx.stroke();
-ctx.beginPath();ctx.moveTo(rx+rw+8,0);ctx.lineTo(rx+rw+8,H);ctx.stroke();
-ctx.setLineDash([]);
-}
-
-function drawOffroadBg(){
-ctx.fillStyle=timeOfDay>0.5?'#3a2a1a':'#6b5233';
-ctx.fillRect(0,0,W,H);
-var rw=W*0.75;
-var rx=(W-rw)/2;
-ctx.fillStyle=timeOfDay>0.5?'#4a3a25':'#8b6f47';
-ctx.fillRect(rx,0,rw,H);
-var sh=(bgOff*1.2)%80;
-for(var i=-2;i<H/80+2;i++){
-var y=i*80+sh-80;
-for(var j=0;j<12;j++){
-var cx=rx+((j*97+i*37)%rw);
-var cy=y+((j*41)%60);
-ctx.fillStyle='rgba(0,0,0,.15)';
-ctx.beginPath();ctx.arc(cx,cy,3,0,7);ctx.fill();
-ctx.fillStyle='rgba(139,90,43,.4)';
-ctx.beginPath();ctx.arc(cx,cy-1,2,0,7);ctx.fill();
-}
-}
-ctx.fillStyle='#5a4a3a';
-ctx.fillRect(rx-25,0,25,H);
-ctx.fillRect(rx+rw,0,25,H);
-var sh2=(bgOff*1.2)%110;
-for(var k=-2;k<H/110+2;k++){
-var by=k*110+sh2-110;
-ctx.fillStyle='#3a5a2a';
-ctx.beginPath();ctx.arc(rx-15,by,12,0,7);ctx.fill();
-ctx.fillStyle='#4a6a35';
-ctx.beginPath();ctx.arc(rx-18,by-4,8,0,7);ctx.fill();
-ctx.beginPath();ctx.arc(rx+rw+15,by+30,12,0,7);ctx.fill();
-ctx.fillStyle='#4a6a35';
-ctx.beginPath();ctx.arc(rx+rw+18,by+26,8,0,7);ctx.fill();
-}
-ctx.strokeStyle='rgba(255,255,255,.2)';
-ctx.setLineDash([10,10]);
-ctx.lineWidth=3;
-ctx.beginPath();ctx.moveTo(rx+2,0);ctx.lineTo(rx+2,H);ctx.stroke();
-ctx.beginPath();ctx.moveTo(rx+rw-2,0);ctx.lineTo(rx+rw-2,H);ctx.stroke();
-ctx.setLineDash([]);
-   }function drawPits(){
-for(var i=0;i<pits.length;i++){
-var p=pits[i];
-if(p.y<-50||p.y>H+50)continue;
-if(p.purple){
-var g=ctx.createRadialGradient(p.x,p.y,p.r*0.3,p.x,p.y,p.r*1.5);
-g.addColorStop(0,'rgba(0,0,0,1)');
-g.addColorStop(0.6,'rgba(60,0,100,.85)');
-g.addColorStop(0.85,'rgba(150,60,220,.5)');
-g.addColorStop(1,'rgba(150,60,220,0)');
-ctx.fillStyle=g;
-ctx.beginPath();ctx.arc(p.x,p.y,p.r*1.5,0,7);ctx.fill();
-ctx.fillStyle='#000';
-ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);ctx.fill();
-ctx.strokeStyle='rgba(180,80,255,.9)';
-ctx.lineWidth=3;
-ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);ctx.stroke();
-}else{
-var g2=ctx.createRadialGradient(p.x,p.y,p.r*0.3,p.x,p.y,p.r*1.4);
-g2.addColorStop(0,'rgba(0,0,0,1)');
-g2.addColorStop(0.7,'rgba(0,0,0,.9)');
-g2.addColorStop(1,'rgba(0,0,0,0)');
-ctx.fillStyle=g2;
-ctx.beginPath();ctx.arc(p.x,p.y,p.r*1.4,0,7);ctx.fill();
-ctx.fillStyle='#000';
-ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);ctx.fill();
-ctx.strokeStyle='rgba(90,60,30,.8)';
-ctx.lineWidth=3;
-ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);ctx.stroke();
-}
-}
-}
-
-function drawSecret(){
-ctx.fillStyle='#050208';
-ctx.fillRect(0,0,W,H);
-for(var i=0;i<crystals.length;i++){
-var cr=crystals[i];
-if(cr.y<-100||cr.y>H+100)continue;
-var g=ctx.createRadialGradient(cr.x,cr.y,2,cr.x,cr.y,cr.size*2.5);
-g.addColorStop(0,'hsla('+cr.hue+',100%,65%,.8)');
-g.addColorStop(0.5,'hsla('+cr.hue+',100%,55%,.3)');
-g.addColorStop(1,'hsla('+cr.hue+',100%,50%,0)');
-ctx.fillStyle=g;
-ctx.beginPath();ctx.arc(cr.x,cr.y,cr.size*2.5,0,7);ctx.fill();
-ctx.save();
-ctx.translate(cr.x,cr.y);
-ctx.rotate(Math.PI/4);
-ctx.fillStyle='hsla('+cr.hue+',90%,60%,.9)';
-ctx.fillRect(-cr.size/2,-cr.size/2,cr.size,cr.size);
-ctx.fillStyle='hsla('+cr.hue+',100%,80%,.7)';
-ctx.fillRect(-cr.size/4,-cr.size/2,cr.size/4,cr.size);
-ctx.restore();
-}
-var rw=W*0.7;
-var rx=(W-rw)/2;
-ctx.fillStyle='#0a0510';
-ctx.fillRect(rx,0,rw,H);
-ctx.strokeStyle='rgba(120,40,180,.3)';
-ctx.setLineDash([15,15]);
-ctx.lineWidth=2;
-ctx.beginPath();ctx.moveTo(rx,0);ctx.lineTo(rx,H);ctx.stroke();
-ctx.beginPath();ctx.moveTo(rx+rw,0);ctx.lineTo(rx+rw,H);ctx.stroke();
-ctx.setLineDash([]);
-
-if(secretPhase===2){
-if(bossZone.active&&!bossZone.hit){
-var zp=bossZone.hitTime/0.7;
-ctx.fillStyle='rgba(255,0,0,'+(0.15+zp*0.35)+')';
-ctx.beginPath();
-ctx.ellipse(bossZone.x,bossZone.y,bossZone.r,bossZone.r*0.6,0,0,7);
-ctx.fill();
-ctx.strokeStyle='rgba(255,50,50,'+(0.5+zp*0.5)+')';
-ctx.lineWidth=4;
-ctx.beginPath();
-ctx.ellipse(bossZone.x,bossZone.y,bossZone.r,bossZone.r*0.6,0,0,7);
-ctx.stroke();
-}
-if(bossZone.hit&&bossZone.active){
-ctx.fillStyle='rgba(255,0,0,.7)';
-ctx.beginPath();
-ctx.ellipse(bossZone.x,bossZone.y,bossZone.r,bossZone.r*0.6,0,0,7);
-ctx.fill();
-}
-var bx=boss.x;
-var by=boss.y-Math.sin(boss.eyeTime)*8;
-var bs=boss.size;
-ctx.fillStyle='rgba(0,0,0,.6)';
-ctx.beginPath();
-ctx.ellipse(bx+5,by+bs*0.5,bs*0.7,bs*0.25,0,0,7);
-ctx.fill();
-ctx.fillStyle='#6a6a6a';
-ctx.beginPath();
-ctx.moveTo(bx,by-bs*0.6);
-ctx.lineTo(bx-bs*0.7,by+bs*0.5);
-ctx.lineTo(bx+bs*0.7,by+bs*0.5);
-ctx.closePath();
-ctx.fill();
-ctx.fillStyle='#4a4a4a';
-ctx.beginPath();
-ctx.moveTo(bx,by-bs*0.6);
-ctx.lineTo(bx+bs*0.7,by+bs*0.5);
-ctx.lineTo(bx+bs*0.2,by+bs*0.5);
-ctx.closePath();
-ctx.fill();
-ctx.fillStyle='#e53935';
-ctx.beginPath();ctx.arc(bx-bs*0.18,by,5,0,7);ctx.fill();
-ctx.beginPath();ctx.arc(bx+bs*0.18,by,5,0,7);ctx.fill();
-ctx.save();
-ctx.globalCompositeOperation='lighter';
-ctx.fillStyle='rgba(255,50,50,.5)';
-ctx.beginPath();ctx.arc(bx-bs*0.18,by,12,0,7);ctx.fill();
-ctx.beginPath();ctx.arc(bx+bs*0.18,by,12,0,7);ctx.fill();
-ctx.restore();
-}
-if(P)drawPickup(P.x,P.y,P.w,P.h);
-
-if(hitFlash>0){
-ctx.fillStyle='rgba(255,0,0,'+hitFlash*0.5+')';
-ctx.fillRect(0,0,W,H);
-}
-if(secretPhase===2&&bossZone.active&&!bossZone.hit){
-ctx.fillStyle='rgba(255,255,255,.7)';
-ctx.font='bold 14px sans-serif';
-ctx.textAlign='center';
-ctx.fillText('⚠️ УКЛОНЯЙСЯ!',W/2,70);
-}
-            }function drawPickup(x,y,w,h){
-var off=OFFROADS[S.activeOff||0];
-var color=off.c;
-var style=off.style||0;
-ctx.save();
-ctx.translate(x,y);
-ctx.fillStyle='rgba(0,0,0,.5)';
-ctx.beginPath();ctx.ellipse(3,5,w*0.7,h*0.55,0,0,7);ctx.fill();
-
-// Корпус
-var r=6;
-ctx.beginPath();
-ctx.moveTo(-w/2+r,-h/2);ctx.lineTo(w/2-r,-h/2);
-ctx.quadraticCurveTo(w/2,-h/2,w/2,-h/2+r);
-ctx.lineTo(w/2,h/2-r);
-ctx.quadraticCurveTo(w/2,h/2,w/2-r,h/2);
-ctx.lineTo(-w/2+r,h/2);
-ctx.quadraticCurveTo(-w/2,h/2,-w/2,h/2-r);
-ctx.lineTo(-w/2,-h/2+r);
-ctx.quadraticCurveTo(-w/2,-h/2,-w/2+r,-h/2);
-ctx.closePath();
-var bg=ctx.createLinearGradient(-w/2,0,w/2,0);
-bg.addColorStop(0,'#1a1a1a');
-bg.addColorStop(0.2,color);
-bg.addColorStop(0.4,'#fff');
-bg.addColorStop(0.6,color);
-bg.addColorStop(0.8,'#2a2a2a');
-bg.addColorStop(1,color);
-ctx.fillStyle=bg;ctx.fill();
-
-// Стиль 0 — обычный пикап
-if(style===0){
-ctx.fillStyle='rgba(15,20,30,.95)';
-ctx.beginPath();
-ctx.moveTo(-w/2+6,h*0.1);
-ctx.lineTo(w/2-6,h*0.1);
-ctx.lineTo(w/2-8,h*0.32);
-ctx.lineTo(-w/2+8,h*0.32);
-ctx.closePath();ctx.fill();
-ctx.fillStyle=color;
-ctx.fillRect(-w/2+6,-h/2+8,w-12,h*0.35);
-ctx.fillStyle='rgba(0,0,0,.15)';
-ctx.fillRect(-w/2+4,h*0.35,w-8,h*0.55);
-}
-
-// Стиль 1 — джип (круглые фары, решётка)
-if(style===1){
-ctx.fillStyle='rgba(15,20,30,.95)';
-ctx.fillRect(-w/2+6,-h/2+8,w-12,h*0.4);
-// Круглые фары
-ctx.fillStyle='#fff9c4';
-ctx.beginPath();ctx.arc(-w/2+10,-h/2+3,4,0,7);ctx.fill();
-ctx.beginPath();ctx.arc(w/2-10,-h/2+3,4,0,7);ctx.fill();
-// Решётка
-ctx.fillStyle='#111';
-for(var i=0;i<7;i++){
-ctx.fillRect(-w*0.25+i*4,-h/2+8,2,4);
-}
-}
-
-// Стиль 2 — большой внедорожник (багажник на крыше)
-if(style===2){
-ctx.fillStyle='rgba(15,20,30,.95)';
-ctx.fillRect(-w/2+5,-h/2+8,w-10,h*0.42);
-// Багажник на крыше
-ctx.fillStyle='#333';
-ctx.fillRect(-w/2+5,-h/2+2,w-10,3);
-ctx.fillRect(-w/2+5,-h/2+2,2,8);
-ctx.fillRect(w/2-7,-h/2+2,2,8);
-// Большие фары
-ctx.fillStyle='#fff9c4';
-ctx.fillRect(-w/2+7,-h/2+3,6,4);
-ctx.fillRect(w/2-13,-h/2+3,6,4);
-}
-
-// Стиль 3 — танк (гусеницы, орудие)
-if(style===3){
-// Танковый корпус
-ctx.fillStyle=color;
-ctx.fillRect(-w/2+5,-h/2+6,w-10,h*0.5);
-// Башня
-ctx.fillStyle='#2a3a1a';
-ctx.beginPath();
-ctx.ellipse(0,0,w*0.3,h*0.15,0,0,7);
-ctx.fill();
-// Орудие
-ctx.fillStyle='#111';
-ctx.fillRect(-2,-h*0.35,4,h*0.2);
-// Гусеницы по бокам
-ctx.fillStyle='#1a1a1a';
-ctx.fillRect(-w/2-2,-h/2+5,5,h-10);
-ctx.fillRect(w/2-3,-h/2+5,5,h-10);
-// Траки
-ctx.fillStyle='#333';
-for(var j=0;j<8;j++){
-ctx.fillRect(-w/2-2,-h/2+8+j*9,5,2);
-ctx.fillRect(w/2-3,-h/2+8+j*9,5,2);
-}
-}
-
-// Фары
-ctx.fillStyle='#fff9c4';
-ctx.beginPath();ctx.ellipse(-w/2+7,-h/2+3,5,3,0,0,7);ctx.fill();
-ctx.beginPath();ctx.ellipse(w/2-7,-h/2+3,5,3,0,0,7);ctx.fill();
-if(isNight()){
-ctx.save();
-ctx.globalCompositeOperation='lighter';
-[-w/2+7,w/2-7].forEach(function(hx){
-var g=ctx.createRadialGradient(hx,-h/2+3,2,hx,-h/2+3,50);
-g.addColorStop(0,'rgba(255,240,180,.5)');
-g.addColorStop(1,'rgba(255,240,180,0)');
-ctx.fillStyle=g;
-ctx.beginPath();ctx.arc(hx,-h/2+3,50,0,7);ctx.fill();
 });
-ctx.restore();
+x.cars=x.cars.filter(c=>c.y<H+120&&c.y>-200);
+// Обгон только в режиме overtake
+if(x.mode==="overtake"){
+x.cars.forEach(c=>{
+if(!c.ot&&c.y>x.p.y+30){c.ot=1;x.ov++;x.sc+=Math.floor((10+x.spd/20)*x.mg);beep(880,.08,"square",.06)}
+});
 }
-// Стопаки
-ctx.fillStyle='#c62828';
-ctx.fillRect(-w/2+4,h/2-4,7,4);
-ctx.fillRect(w/2-11,h/2-4,7,4);
-// Колёса
-ctx.fillStyle='#0a0a0a';
-ctx.fillRect(-w/2-4,-h/2+14,7,22);
-ctx.fillRect(w/2-3,-h/2+14,7,22);
-ctx.fillRect(-w/2-4,h/2-30,7,22);
-ctx.fillRect(w/2-3,h/2-30,7,22);
-ctx.strokeStyle='rgba(255,255,255,.2)';
-ctx.lineWidth=1;
-ctx.strokeRect(-w/2+1,-h/2+1,w-2,h-2);
-ctx.restore();
+// Встречка: +очки за пройденную машину
+if(x.mode==="oncoming"){
+x.cars.forEach(c=>{
+if(!c.ot&&c.y>x.p.y+40){c.ot=1;x.ov++;x.sc+=Math.floor((15+x.spd/15)*x.mg);beep(880,.08,"square",.06)}
+});
+}
+for(const c of x.cars)if(Math.abs(c.x-x.p.x)<(c.w+x.p.w)/2-6&&Math.abs(c.y-x.p.y)<(c.h+x.p.h)/2-8){crash();return}
+if(x.sh>0)x.sh*=.9;
+updEngine(x.spd);
 }
 
-// ★ БОЛИД F1 RED BULL ★
-function drawF1Car(x,y,w,h){
-var bw=w*1.4;
-var bh=h*1.0;
-ctx.save();
-ctx.translate(x,y);
-ctx.fillStyle='rgba(0,0,0,.55)';
-ctx.beginPath();
-ctx.ellipse(3,5,bw*0.6,bh*0.5,0,0,7);
-ctx.fill();
-// Переднее крыло
-ctx.fillStyle='#0d1456';
-ctx.fillRect(-bw/2-8,-bh/2-2,bw+16,8);
-ctx.fillStyle='#ffd600';
-ctx.fillRect(-bw/2-8,-bh/2-2,bw+16,3);
-ctx.fillStyle='#e53935';
-ctx.fillRect(-bw/2-8,-bh/2+3,bw+16,3);
-// Нос
-ctx.fillStyle='#0d1456';
-ctx.beginPath();
-ctx.moveTo(-bw*0.15,-bh/2+5);
-ctx.lineTo(bw*0.15,-bh/2+5);
-ctx.lineTo(bw*0.1,-bh/4);
-ctx.lineTo(-bw*0.1,-bh/4);
-ctx.closePath();
-ctx.fill();
-ctx.fillStyle='#ffd600';
-ctx.fillRect(-bw*0.15,-bh/2+8,bw*0.3,3);
-ctx.fillStyle='#e53935';
-ctx.fillRect(-bw*0.08,-bh/2+5,bw*0.16,2);
-// Корпус
-ctx.beginPath();
-ctx.moveTo(-bw*0.2,-bh*0.2);
-ctx.lineTo(bw*0.2,-bh*0.2);
-ctx.lineTo(bw*0.25,bh*0.35);
-ctx.lineTo(-bw*0.25,bh*0.35);
-ctx.closePath();
-var bg=ctx.createLinearGradient(-bw*0.25,0,bw*0.25,0);
-bg.addColorStop(0,'#0a0e3a');
-bg.addColorStop(0.3,'#1a237e');
-bg.addColorStop(0.5,'#3f51b5');
-bg.addColorStop(0.7,'#1a237e');
-bg.addColorStop(1,'#0a0e3a');
-ctx.fillStyle=bg;ctx.fill();
-ctx.fillStyle='#ffd600';
-ctx.fillRect(-bw*0.05,-bh*0.2,bw*0.1,bh*0.55);
-ctx.fillStyle='#e53935';
-ctx.fillRect(-bw*0.2,-bh*0.15,3,bh*0.45);
-ctx.fillRect(bw*0.2-3,-bh*0.15,3,bh*0.45);
-// Кокпит
-ctx.fillStyle='#0d1456';
-ctx.beginPath();
-ctx.ellipse(0,-bh*0.05,bw*0.13,bh*0.14,0,0,7);
-ctx.fill();
-ctx.fillStyle='#ffd600';
-ctx.beginPath();
-ctx.arc(0,-bh*0.06,bw*0.08,0,7);
-ctx.fill();
-ctx.fillStyle='#111';
-ctx.beginPath();
-ctx.arc(0,-bh*0.08,bw*0.07,Math.PI*1.1,Math.PI*1.9);
-ctx.fill();
-// Борта
-ctx.fillStyle='#0d1456';
-ctx.fillRect(-bw*0.28,-bh*0.15,bw*0.08,bh*0.4);
-ctx.fillRect(bw*0.2,-bh*0.15,bw*0.08,bh*0.4);
-ctx.fillStyle='#000';
-ctx.fillRect(-bw*0.28,-bh*0.1,bw*0.08,5);
-ctx.fillRect(bw*0.2,-bh*0.1,bw*0.08,5);
-// Заднее крыло
-ctx.fillStyle='#0d1456';
-ctx.fillRect(-bw/2-4,bh*0.38,bw+8,10);
-ctx.fillStyle='#ffd600';
-ctx.fillRect(-bw/2-4,bh*0.38,bw+8,3);
-ctx.fillStyle='#e53935';
-ctx.fillRect(-bw/2-4,bh*0.45,bw+8,3);
-ctx.fillStyle='#333';
-ctx.fillRect(-bw*0.15,bh*0.32,3,8);
-ctx.fillRect(bw*0.15-3,bh*0.32,3,8);
-// Огонь
-ctx.fillStyle='#e53935';
-ctx.beginPath();
-ctx.arc(0,bh*0.4,bw*0.04,0,7);
-ctx.fill();
-// Колёса
-ctx.fillStyle='#0a0a0a';
-ctx.beginPath();ctx.ellipse(-bw/2-5,-bh*0.25,5,11,0,0,7);ctx.fill();
-ctx.beginPath();ctx.ellipse(bw/2+5,-bh*0.25,5,11,0,0,7);ctx.fill();
-ctx.beginPath();ctx.ellipse(-bw/2-5,bh*0.25,7,14,0,0,7);ctx.fill();
-ctx.beginPath();ctx.ellipse(bw/2+5,bh*0.25,7,14,0,0,7);ctx.fill();
-ctx.fillStyle='#8a8a95';
-ctx.beginPath();ctx.ellipse(-bw/2-5,-bh*0.25,2,5,0,0,7);ctx.fill();
-ctx.beginPath();ctx.ellipse(bw/2+5,-bh*0.25,2,5,0,0,7);ctx.fill();
-ctx.beginPath();ctx.ellipse(-bw/2-5,bh*0.25,3,6.5,0,0,7);ctx.fill();
-ctx.beginPath();ctx.ellipse(bw/2+5,bh*0.25,3,6.5,0,0,7);ctx.fill();
-ctx.strokeStyle='rgba(255,214,0,.4)';
-ctx.lineWidth=1;
-ctx.strokeRect(-bw*0.25,-bh*0.2,bw*0.5,bh*0.55);
-ctx.restore();
-                            }function drawCar(x,y,w,h,color,accent,a,type,isP){
-ctx.save();
-ctx.translate(x,y);
-ctx.rotate(a);
-ctx.fillStyle='rgba(0,0,0,.45)';
-ctx.beginPath();
-ctx.ellipse(3,4,w*0.6,h*0.5,0,0,7);
-ctx.fill();
+function spawn(){
+const x=g,mid=W/2,lanes=[mid-110,mid,mid+110];
+const free=lanes.filter(l=>!x.cars.some(c=>Math.abs(c.x-l)<55&&(c.y>-80||c.y>H-80)));
+if(!free.length)return;
+const ln=free[Math.floor(Math.random()*free.length)];
+const col=["#c0392b","#2980b9","#27ae60","#d35400","#8e44ad","#16a085","#7f8c8d","#2c3e50"];
+const tr=Math.random()<.15;
+const type=tr?"truck":["sedan","sedan","suv"][Math.floor(Math.random()*3)];
+// Встречка: спавним сверху, едут на игрока
+const yStart=x.mode==="oncoming"?-120:-100;
+x.cars.push({x:ln,y:yStart,w:tr?50:42,h:tr?100:70,c:tr?"#5d6d7e":col[Math.floor(Math.random()*col.length)],rs:.5+Math.random()*.4,ot:0,tr,type});
+}
 
-var r=type===2?4:(type===1?10:8);
-ctx.beginPath();
-if(type===2){
-ctx.moveTo(-w/2+r,-h/2+4);
-ctx.quadraticCurveTo(0,-h/2-2,w/2-r,-h/2+4);
-ctx.lineTo(w/2+2,-h/2+10);ctx.lineTo(w/2+4,h/2-8);
-ctx.quadraticCurveTo(w/2+4,h/2,w/2-4,h/2);
-ctx.lineTo(-w/2+4,h/2);
-ctx.quadraticCurveTo(-w/2-2,h/2,-w/2-2,h/2-8);
-ctx.lineTo(-w/2-4,-h/2+10);
-}else if(type===1){
-ctx.moveTo(-w/2+r,-h/2+2);
-ctx.lineTo(w/2-r,-h/2);
-ctx.quadraticCurveTo(w/2,-h/2,w/2,-h/2+r);
-ctx.lineTo(w/2+2,h/2-r);
-ctx.quadraticCurveTo(w/2+2,h/2,w/2-r,h/2);
-ctx.lineTo(-w/2+r,h/2);
-ctx.quadraticCurveTo(-w/2,h/2,-w/2,h/2-r);
-ctx.lineTo(-w/2,-h/2+r+2);
-ctx.quadraticCurveTo(-w/2,-h/2+2,-w/2+r,-h/2+2);
-}else if(type===4){
-ctx.moveTo(-w/2+r,-h/2);
-ctx.lineTo(w/2-r,-h/2);
-ctx.quadraticCurveTo(w/2,-h/2,w/2,-h/2+r);
-ctx.lineTo(w/2,h/2-r-6);
-ctx.quadraticCurveTo(w/2,h/2,w/2-r-2,h/2);
-ctx.lineTo(-w/2+r,h/2);
-ctx.quadraticCurveTo(-w/2,h/2,-w/2,h/2-r);
-ctx.lineTo(-w/2,-h/2+r);
-ctx.quadraticCurveTo(-w/2,-h/2,-w/2+r,-h/2);
+function draw(){
+const x=g;ctx.save();
+if(x.sh>.5)ctx.translate((Math.random()-.5)*x.sh,(Math.random()-.5)*x.sh);
+ctx.fillStyle="#0a0a0a";ctx.fillRect<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>🏎️ Обгон 2.0</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+body{background:#000;color:#fff;font-family:'Courier New',monospace;display:flex;align-items:center;justify-content:center;min-height:100vh;overflow:hidden}
+#game{width:100%;max-width:500px;background:#111;border-radius:12px;padding:10px;position:relative;min-height:100vh;display:flex;flex-direction:column}
+h1{text-align:center;color:#f1c40f;font-size:26px;margin:16px 0 6px;letter-spacing:3px;text-shadow:0 0 20px rgba(241,196,15,.5)}
+.subtitle{text-align:center;color:#666;font-size:11px;margin-bottom:14px;letter-spacing:2px}
+.screen{display:none;flex:1;flex-direction:column;align-items:center;justify-content:flex-start;padding:8px}
+.screen.active{display:flex}
+.menu-btn{display:block;width:100%;padding:18px;margin:8px 0;background:linear-gradient(135deg,#2c3e50,#34495e);color:#fff;border:2px solid #444;border-radius:12px;font-family:inherit;font-size:16px;font-weight:bold;cursor:pointer;transition:.15s;letter-spacing:1px;text-align:center}
+.menu-btn:active{transform:scale(.97);background:linear-gradient(135deg,#3498db,#2980b9)}
+.menu-btn.blue{background:linear-gradient(135deg,#00b4d8,#0077b6);border-color:#00b4d8}
+.menu-btn.pink{background:linear-gradient(135deg,#c98b8b,#a56b6b);border-color:#c98b8b}
+.menu-btn.gray{background:linear-gradient(135deg,#95a5a6,#7f8c8d);border-color:#95a5a6}
+.menu-btn.gray2{background:linear-gradient(135deg,#bdc3c7,#95a5a6);border-color:#bdc3c7;color:#333}
+.menu-btn.green{background:linear-gradient(135deg,#2ecc71,#27ae60);border-color:#2ecc71}
+.admin-mini{display:block;width:auto;padding:6px 20px;margin:0 auto 14px;background:rgba(255,255,255,.08);color:#ccc;border:1px solid #444;border-radius:20px;font-family:inherit;font-size:11px;cursor:pointer;letter-spacing:1px}
+.coins-display{text-align:center;color:#f1c40f;font-size:18px;font-weight:bold;margin-top:auto;padding:16px 0 8px;letter-spacing:1px}
+canvas{display:block;width:100%;height:auto;border-radius:8px;touch-action:none;background:#000}
+.controls{display:flex;justify-content:space-between;margin-top:8px;gap:8px}
+.controls.hide{display:none}
+.ctrl{flex:1;height:70px;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.25);border-radius:50%;color:#fff;font-size:28px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.ctrl:active{background:rgba(233,69,96,.6);transform:scale(.95)}
+.btn{display:block;width:100%;padding:11px;margin:5px 0;background:#e94560;color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:13px;font-weight:bold;cursor:pointer}
+.btn:active{transform:scale(.97)}
+.btn.green{background:#2ecc71}.btn.blue{background:#3498db}.btn.gold{background:#f39c12}.btn.dark{background:#2c2c2c;border:1px solid #666}
+.overlay{position:absolute;inset:0;background:rgba(10,10,20,.96);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;border-radius:12px;padding:16px;text-align:center;z-index:10;overflow-y:auto}
+.hidden{display:none!important}
+.stat{font-size:13px;margin:3px 0}
+.big{font-size:22px;color:#f1c40f;font-weight:bold}
+.shop-item{display:flex;justify-content:space-between;align-items:center;width:100%;padding:8px 10px;background:#0f3460;border-radius:8px;margin:4px 0;font-size:12px;border-left:4px solid #e94560}
+.shop-item.bought{border-left-color:#2ecc71;opacity:.7}
+.shop-item.owned{border-left-color:#f1c40f;background:#1a3a5c}
+.shop-item .info{text-align:left;flex:1}
+.shop-item .name{font-weight:bold;color:#fff}
+.shop-item .desc{font-size:10px;color:#aaa;margin-top:2px}
+.shop-item button{padding:6px 10px;background:#f39c12;border:none;border-radius:6px;color:#000;font-weight:bold;cursor:pointer;font-size:11px}
+.shop-item button:disabled{background:#555;color:#999}
+.coin{font-size:15px;color:#f1c40f;font-weight:bold;margin-bottom:8px}
+.section-title{width:100%;text-align:left;color:#e94560;font-size:11px;font-weight:bold;margin:8px 0 3px;letter-spacing:1px}
+.stats-table{width:100%;background:#0f3460;border-radius:10px;padding:14px;margin:8px 0}
+.stats-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08);font-size:13px}
+.stats-row:last-child{border-bottom:none}
+.stats-row .val{color:#f1c40f;font-weight:bold}
+.admin-input{width:100%;padding:10px;background:#0a0a0a;border:2px solid #e94560;border-radius:8px;color:#fff;font-family:inherit;font-size:14px;text-align:center;margin:10px 0;letter-spacing:2px}
+.admin-input:focus{outline:none;border-color:#f1c40f}
+.toggle-view{display:flex;gap:8px;margin:8px 0;width:100%}
+.toggle-view button{flex:1;padding:10px;background:#0f3460;border:2px solid #444;border-radius:8px;color:#fff;font-family:inherit;font-size:12px;font-weight:bold;cursor:pointer}
+.toggle-view button.active{background:#e94560;border-color:#f1c40f}
+</style>
+</head><body>
+<div id="game">
+
+<!-- ===== ГЛАВНОЕ МЕНЮ ===== -->
+<div class="screen active" id="scMenu">
+<h1>🏎️ ОБГОН 2.0</h1>
+<div class="subtitle">— ГОНКИ ПО ТРАССЕ —</div>
+<button class="admin-mini" onclick="openAdminLogin()">🔒 Админ</button>
+
+<button class="menu-btn blue" onclick="startMode('overtake')">🚗 ИГРАТЬ</button>
+<button class="menu-btn pink" onclick="startMode('oncoming')">🏁 ВСТРЕЧКА</button>
+<button class="menu-btn gray" onclick="showScreen('scStats');renderStats()">📊 СТАТИСТИКА</button>
+<button class="menu-btn gray2" onclick="openShop()">🛒 МАГАЗИН</button>
+
+<div class="coins-display">💰 <span id="menuCoins">0</span></div>
+</div>
+
+<!-- ===== ИГРА ===== -->
+<div class="screen" id="scGame">
+<div style="position:relative;width:100%">
+<canvas id="road" width="460" height="620"></canvas>
+</div>
+<div class="controls" id="controls">
+<div class="ctrl" id="btnLeft">◀</div>
+<div class="ctrl" id="btnRight">▶</div>
+</div>
+</div>
+
+<!-- ===== СТАТИСТИКА ===== -->
+<div class="screen" id="scStats">
+<h1 style="font-size:20px">📊 СТАТИСТИКА</h1>
+<div class="stats-table" id="statsTable"></div>
+<button class="btn blue" onclick="showScreen('scMenu')">↩ НАЗАД</button>
+</div>
+
+<!-- ===== МАГАЗИН ===== -->
+<div class="screen" id="scShop">
+<h1 style="font-size:20px;color:#f39c12">🛒 МАГАЗИН</h1>
+<div class="coin">💰 <span id="shopCoins">0</span></div>
+<div id="shopList" style="width:100%"></div>
+<button class="btn blue" onclick="showScreen('scMenu')">↩ НАЗАД</button>
+</div>
+
+<!-- ===== НАСТРОЙКИ ВИДА (перед игрой) ===== -->
+<div class="overlay hidden" id="viewSelect">
+<div style="font-size:18px;color:#e94560;font-weight:bold;margin-bottom:8px">🎮 ВЫБОР ВИДА</div>
+<div style="font-size:12px;color:#aaa;margin-bottom:12px">Как смотришь на дорогу?</div>
+<div class="toggle-view">
+<button id="vTop" class="active" onclick="setView('top')">🗺️ Сверху</button>
+<button id="vFp" onclick="setView('fp')">🚗 От 1-го лица</button>
+</div>
+<div style="font-size:12px;color:#f1c40f;margin:10px 0">🌧️ Погода: <span id="weatherPreview">ясно</span></div>
+<button class="btn green" onclick="confirmStart()">▶ НАЧАТЬ</button>
+<button class="btn dark" onclick="document.getElementById('viewSelect').classList.add('hidden')">↩ ОТМЕНА</button>
+</div>
+
+<!-- ===== АДМИН ВХОД ===== -->
+<div class="overlay hidden" id="adminLogin">
+<div style="font-size:16px;color:#e94560;font-weight:bold;margin-bottom:4px">🔒 ADMIN LOGIN</div>
+<input type="password" id="adminPass" class="admin-input" placeholder="•••••••••" autocomplete="off">
+<button class="btn green" onclick="checkPass()">🔓 ВОЙТИ</button>
+<button class="btn dark" onclick="closeAdmin()">↩ ОТМЕНА</button>
+<div id="adminError" style="color:#e74c3c;font-size:12px;margin-top:6px;height:14px"></div>
+</div>
+
+<!-- ===== АДМИН ПАНЕЛЬ ===== -->
+<div class="overlay hidden" id="adminPanel">
+<div style="font-size:16px;color:#2ecc71;font-weight:bold;margin-bottom:8px">🔓 ADMIN MODE</div>
+<div class="coin">💰 Монеты: <span id="adminCoins">0</span></div>
+<div class="section-title">💵 ЧИТЫ</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;width:100%">
+<button class="btn gold" onclick="addCoins(100)">+100💰</button>
+<button class="btn gold" onclick="addCoins(1000)">+1000💰</button>
+<button class="btn gold" onclick="addCoins(10000)">+10000💰</button>
+<button class="btn gold" onclick="addCoins(999999)">+999999💰</button>
+</div>
+<div class="section-title">🚗 МАШИНЫ</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;width:100%">
+<button class="btn blue" onclick="giveCar('toyota')">🚗 Toyota</button>
+<button class="btn blue" onclick="giveCar('prius')">🌱 Prius</button>
+<button class="btn blue" onclick="giveCar('skyline')">🏁 Skyline</button>
+<button class="btn blue" onclick="giveCar('mustang')">🐎 Mustang</button>
+<button class="btn blue" onclick="giveCar('bmw')">🇩🇪 BMW M3</button>
+<button class="btn blue" onclick="giveCar('lambo')">🐂 Lambo</button>
+<button class="btn blue" onclick="maxUpgrades()">⚙ МАКС</button>
+</div>
+<div class="section-title">🌧 ПОГОДА</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;width:100%">
+<button class="btn blue" onclick="adminWeather='clear'">☀️ Ясно</button>
+<button class="btn blue" onclick="adminWeather='rain'">🌧️ Дождь</button>
+<button class="btn blue" onclick="adminWeather='random'">🎲 Случайно</button>
+</div>
+<div class="section-title">⚙ УПРАВЛЕНИЕ</div>
+<button class="btn dark" onclick="resetProgress()">🗑 Сброс прогресса</button>
+<button class="btn green" onclick="closeAdmin()">↩ ВЫЙТИ</button>
+</div>
+
+<!-- ===== GAME OVER ===== -->
+<div class="overlay hidden" id="gameover">
+<div style="font-size:44px;margin:10px 0">💥</div>
+<div style="font-size:20px;color:#e74c3c;font-weight:bold;margin-bottom:16px">АВАРИЯ!</div>
+<div class="stat">Обгонов: <span class="big" id="finalOvertakes">0</span></div>
+<div class="stat">Очки: <span class="big" id="finalScore">0</span></div>
+<div class="stat">Скорость: <span class="big" id="finalSpeed">0</span> км/ч</div>
+<div class="coin" style="margin-top:10px">+💰 <span id="earnedCoins">0</span></div>
+<button class="btn green" style="margin-top:14px" onclick="restartGame()">🔄 ЗАНОВО</button>
+<button class="btn blue" onclick="backToMenu()">🏠 В МЕНЮ</button>
+</div>
+
+</div><script>
+// ===== АУДИО =====
+let AC=null,S=true,eO=null,eG=null;
+function initAudio(){if(AC)return;try{AC=new(window.AudioContext||window.webkitAudioContext)()}catch(e){S=false}}
+function beep(f,d,t="square",v=.1){if(!S||!AC)return;const o=AC.createOscillator(),g=AC.createGain();o.type=t;o.frequency.value=f;g.gain.setValueAtTime(v,AC.currentTime);g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+d);o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+d)}
+function startEngine(){if(!S||!AC||eO)return;eO=AC.createOscillator();eG=AC.createGain();eO.type="sawtooth";eO.frequency.value=60;eG.gain.value=.03;eO.connect(eG);eG.connect(AC.destination);eO.start()}
+function stopEngine(){if(eO){try{eO.stop()}catch(e){}eO=null;eG=null}}
+function updEngine(v){if(eO)eO.frequency.value=50+v*.4}
+function sfxRain(){beep(200,.3,"sawtooth",.04)}
+
+// ===== 6 МАШИН =====
+const CARS=[
+{id:"toyota",name:"🚗 Старая Toyota",desc:"Стандартная",price:0,stats:{grip:1,accel:1,maxBonus:0,coinBonus:1},color:"#e94560",type:"sedan"},
+{id:"prius",name:"🌱 Toyota Prius",desc:"+30% монет",price:150,stats:{grip:1.1,accel:0.95,maxBonus:-10,coinBonus:1.3},color:"#2ecc71",type:"prius"},
+{id:"bmw",name:"🇩🇪 BMW M3",desc:"Баланс и скорость",price:300,stats:{grip:1.2,accel:1.1,maxBonus:10,coinBonus:1.1},color:"#1a1a1a",type:"bmw"},
+{id:"skyline",name:"🏁 Nissan Skyline GT-R",desc:"+25 км/ч макс.",price:400,stats:{grip:1.3,accel:1.2,maxBonus:25,coinBonus:1},color:"#3498db",type:"skyline"},
+{id:"mustang",name:"🐎 Ford Mustang",desc:"Агрессивный, +15% очков",price:600,stats:{grip:1.15,accel:1.3,maxBonus:15,coinBonus:1.15},color:"#c0392b",type:"mustang"},
+{id:"lambo",name:"🐂 Lamborghini",desc:"Топ-кар, +40 км/ч",price:1200,stats:{grip:1.4,accel:1.4,maxBonus:40,coinBonus:1.2},color:"#f1c40f",type:"lambo"}
+];
+
+const SHOP=[
+{id:"grip",name:"🛞 Спортивные шины",desc:"Плавнее управление",price:60,max:3},
+{id:"fuel",name:"⛽ Турбонаддув",desc:"+15 км/ч макс.",price:80,max:5},
+{id:"magnet",name:"💎 Драгоценный груз",desc:"+25% очков",price:100,max:3}
+];
+
+// ===== СОСТОЯНИЕ =====
+const cv=document.getElementById("road"),ctx=cv.getContext("2d"),W=cv.width,H=cv.height;
+let best=+localStorage.getItem("otB")||0,coins=+localStorage.getItem("otC")||0;
+let up=JSON.parse(localStorage.getItem("otU")||'{"grip":0,"fuel":0,"magnet":0,"car":"toyota"}');
+if(!up.car)up.car="toyota";
+let stats=JSON.parse(localStorage.getItem("otStats")||'{"totalGames":0,"totalOvertakes":0,"totalCoins":0,"oncomingBest":0,"crashes":0}');
+let mode="overtake", view="top", weather="clear", adminWeather="random";
+
+function getCar(){return CARS.find(c=>c.id===up.car)||CARS[0]}
+function save(){localStorage.setItem("otC",coins);localStorage.setItem("otU",JSON.stringify(up));document.getElementById("menuCoins").textContent=coins;document.getElementById("shopCoins").textContent=coins;document.getElementById("adminCoins").textContent=coins}
+function saveStats(){localStorage.setItem("otStats",JSON.stringify(stats))}
+
+// ===== ЭКРАНЫ =====
+function showScreen(id){
+document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+document.getElementById(id).classList.add("active");
+document.getElementById("menuCoins").textContent=coins;
+if(id==="scMenu")stopEngine();
+}
+
+// ===== СТАТИСТИКА =====
+function renderStats(){
+const t=document.getElementById("statsTable");
+t.innerHTML=`
+<div class="stats-row"><span>🎮 Всего игр</span><span class="val">${stats.totalGames}</span></div>
+<div class="stats-row"><span>🚗 Обгонов всего</span><span class="val">${stats.totalOvertakes}</span></div>
+<div class="stats-row"><span>💰 Монет заработано</span><span class="val">${stats.totalCoins}</span></div>
+<div class="stats-row"><span>💥 Аварий</span><span class="val">${stats.crashes}</span></div>
+<div class="stats-row"><span>🏁 Рекорд во Встречке</span><span class="val">${stats.oncomingBest}</span></div>
+<div class="stats-row"><span>🏆 Рекорд в Обгоне</span><span class="val">${best}</span></div>
+<div class="stats-row"><span>🚗 Машина</span><span class="val">${getCar().name}</span></div>
+<div class="stats-row"><span>🛞 Шины</span><span class="val">${up.grip||0}/3</span></div>
+<div class="stats-row"><span>⛽ Турбо</span><span class="val">${up.fuel||0}/5</span></div>
+<div class="stats-row"><span>💎 Груз</span><span class="val">${up.magnet||0}/3</span></div>
+`;
+}
+
+// ===== МАГАЗИН =====
+function openShop(){showScreen("scShop");renderShop()}
+function renderShop(){
+const L=document.getElementById("shopList");L.innerHTML="";
+const t1=document.createElement("div");t1.className="section-title";t1.textContent="⚙ УЛУЧШЕНИЯ";L.appendChild(t1);
+SHOP.forEach(it=>{
+const lv=up[it.id]||0,mx=lv>=it.max,ok=!mx&&coins>=it.price;
+const d=document.createElement("div");d.className="shop-item"+(mx?" bought":"");
+d.innerHTML=`<div class="info"><div class="name">${it.name} <span style="color:#f39c12">ур. ${lv}/${it.max}</span></div><div class="desc">${it.desc}</div></div><button ${ok?"":"disabled"}>${mx?"МАКС":`💰 ${it.price}`}</button>`;
+if(ok)d.querySelector("button").onclick=()=>buyUp(it);
+L.appendChild(d)});
+const t2=document.createElement("div");t2.className="section-title";t2.textContent="🚗 МАШИНЫ (6)";L.appendChild(t2);
+CARS.forEach(c=>{
+const owned=up.car===c.id,canBuy=!owned&&coins>=c.price;
+const d=document.createElement("div");d.className="shop-item"+(owned?" owned":"");
+const s=c.stats;
+let btnTxt=owned?"✓ ВЫБРАНА":(c.price===0?"ВЫБРАТЬ":`💰 ${c.price}`);
+d.innerHTML=`<div class="info"><div class="name">${c.name}</div><div class="desc">${c.desc}<br><span style="color:#6cf">+${s.maxBonus} км/ч · ×${s.grip} руль · ×${s.coinBonus} монет</span></div></div><button ${(!owned&&c.price>0&&!canBuy)?"disabled":""}>${btnTxt}</button>`;
+const btn=d.querySelector("button");
+if(owned)btn.disabled=true;
+else if(c.price===0||canBuy)btn.onclick=()=>buyCar(c);
+L.appendChild(d)});
+}
+function buyUp(it){const lv=up[it.id]||0;if(lv>=it.max||coins<it.price)return;coins-=it.price;up[it.id]=lv+1;save();beep(660,.1,"sine",.1);setTimeout(()=>beep(990,.15,"sine",.1),80);renderShop()}
+function buyCar(c){if(up.car===c.id)return;if(c.price>0){if(coins<c.price)return;coins-=c.price}up.car=c.id;save();beep(660,.1,"sine",.1);setTimeout(()=>beep(990,.15,"sine",.1),80);setTimeout(()=>beep(1320,.2,"sine",.1),160);renderShop()}
+
+// ===== ВЫБОР ВИДА + ПОГОДА =====
+function startMode(m){
+mode=m;
+document.getElementById("viewSelect").classList.remove("hidden");
+// Рандомная погода 30% шанс дождя
+if(adminWeather==="rain")weather="rain";
+else if(adminWeather==="clear")weather="clear";
+else weather=Math.random()<0.3?"rain":"clear";
+document.getElementById("weatherPreview").textContent=weather==="rain"?"🌧️ дождь":"☀️ ясно";
+}
+function setView(v){
+view=v;
+document.getElementById("vTop").classList.toggle("active",v==="top");
+document.getElementById("vFp").classList.toggle("active",v==="fp");
+beep(440,.05);
+}
+function confirmStart(){
+document.getElementById("viewSelect").classList.add("hidden");
+startGame();
+}
+
+// ===== АДМИН =====
+const ADMIN_PASS="BeanNewgeme3";
+function openAdminLogin(){beep(440,.05);document.getElementById("adminLogin").classList.remove("hidden");document.getElementById("adminPass").value="";document.getElementById("adminError").textContent="";setTimeout(()=>document.getElementById("adminPass").focus(),100)}
+function checkPass(){const v=document.getElementById("adminPass").value;if(v===ADMIN_PASS){beep(880,.1,"sine",.1);setTimeout(()=>beep(1320,.15,"sine",.1),80);document.getElementById("adminLogin").classList.add("hidden");document.getElementById("adminPanel").classList.remove("hidden");document.getElementById("adminCoins").textContent=coins}else{beep(200,.2,"sawtooth",.15);document.getElementById("adminError").textContent="❌ НЕВЕРНЫЙ ПАРОЛЬ";document.getElementById("adminPass").value=""}}
+function closeAdmin(){beep(440,.05);document.getElementById("adminLogin").classList.add("hidden");document.getElementById("adminPanel").classList.add("hidden")}
+function addCoins(n){coins+=n;save();beep(660,.08,"sine",.1)}
+function giveCar(id){up.car=id;save();beep(660,.1,"sine",.1)}
+function maxUpgrades(){up.grip=3;up.fuel=5;up.magnet=3;save();beep(660,.1,"sine",.1);setTimeout(()=>beep(1320,.2,"sine",.1),100)}
+function resetProgress(){if(!confirm("Сбросить ВЕСЬ прогресс?"))return;localStorage.clear();location.reload()}
+document.getElementById("adminPass").addEventListener("keydown",e=>{if(e.key==="Enter")checkPass()});
+initAudio();
+</script>// ===== ИГРА =====
+let g=null;
+function startGame(){
+initAudio();
+document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+document.getElementById("scGame").classList.add("active");
+document.getElementById("gameover").classList.add("hidden");
+document.getElementById("controls").classList.remove("hide");
+const car=getCar(),s=car.stats;
+g={
+run:1,mode:mode,view:view,weather:weather,
+p:{x:W/2,y:H-110,w:40,h:66,sp:5.5*(1+(up.grip||0)*0.08)*s.grip,tx:W/2,ti:0,color:car.color,type:car.type},
+cars:[],sc:0,ov:0,spd:60,bs:4*s.accel,ms:(200+(up.fuel||0)*15+s.maxBonus),
+st:0,si:70,k:{l:0,r:0},sh:0,mg:(1+(up.magnet||0)*0.25)*s.coinBonus,rs:0,
+rainDrops:[]
+};
+if(g.weather==="rain"){
+for(let i=0;i<80;i++)g.rainDrops.push({x:Math.random()*W,y:Math.random()*H,sp:8+Math.random()*6,len:8+Math.random()*10});
+}
+stats.totalGames++;saveStats();
+setup();startEngine();loop();
+}
+function restartGame(){startGame()}
+function backToMenu(){if(g)g.run=0;stopEngine();document.getElementById("gameover").classList.add("hidden");document.getElementById("controls").classList.add("hide");showScreen("scMenu")}
+
+function setup(){
+const pL=e=>{e.preventDefault();if(g)g.k.l=1},pR=e=>{e.preventDefault();if(g)g.k.r=1},rL=e=>{e.preventDefault();if(g)g.k.l=0},rR=e=>{e.preventDefault();if(g)g.k.r=0};
+const bL=document.getElementById("btnLeft"),bR=document.getElementById("btnRight");
+const nL=bL.cloneNode(true),nR=bR.cloneNode(true);
+bL.parentNode.replaceChild(nL,bL);bR.parentNode.replaceChild(nR,bR);
+nL.addEventListener("touchstart",pL);nL.addEventListener("touchend",rL);nL.addEventListener("mousedown",pL);nL.addEventListener("mouseup",rL);nL.addEventListener("mouseleave",rL);
+nR.addEventListener("touchstart",pR);nR.addEventListener("touchend",rR);nR.addEventListener("mousedown",pR);nR.addEventListener("mouseup",rR);nR.addEventListener("mouseleave",rR);
+let tx=null;cv.ontouchstart=e=>tx=e.touches[0].clientX;
+cv.ontouchmove=e=>{if(tx===null||!g)return;const d=e.touches[0].clientX-tx;g.p.tx=Math.max(70,Math.min(W-70,g.p.tx+d*.8));tx=e.touches[0].clientX};
+cv.ontouchend=()=>tx=null;
+document.onkeydown=e=>{if(!g)return;if(e.key==="ArrowLeft"||e.key==="a")g.k.l=1;if(e.key==="ArrowRight"||e.key==="d")g.k.r=1};
+document.onkeyup=e=>{if(!g)return;if(e.key==="ArrowLeft"||e.key==="a")g.k.l=0;if(e.key==="ArrowRight"||e.key==="d")g.k.r=0};
+}
+
+function loop(){if(!g||!g.run)return;update();draw();requestAnimationFrame(loop)}
+
+function update(){
+const x=g;
+// Мокрая дорога = медленнее реакция
+const rainPenalty=x.weather==="rain"?0.85:1;
+x.spd=Math.min(x.ms,60+x.ov*3);
+const sf=(x.bs+(x.spd-60)*.025)*rainPenalty;
+x.rs=(x.rs+sf*3)%60;
+if(x.k.l)x.p.tx-=x.p.sp;if(x.k.r)x.p.tx+=x.p.sp;
+x.p.tx=Math.max(70,Math.min(W-70,x.p.tx));
+x.p.x+=(x.p.tx-x.p.x)*.25;x.p.ti=(x.p.tx-x.p.x)*.05;
+x.st++;
+if(x.st>x.si){x.st=0;x.si=Math.max(30,70-x.ov*1.5);spawn()}
+x.cars.forEach(c=>{
+if(x.mode==="oncoming")c.y+=sf*c.rs*1.8;
+else c.y+=sf*c.rs;
+});
+x.cars=x.cars.filter(c=>c.y<H+120&&c.y>-200);
+// Очки за проезд
+x.cars.forEach(c=>{
+if(!c.ot&&c.y>x.p.y+30){
+c.ot=1;x.ov++;
+const pts=x.mode==="oncoming"?Math.floor((15+x.spd/15)*x.mg):Math.floor((10+x.spd/20)*x.mg);
+x.sc+=pts;beep(880,.08,"square",.06);
+}
+});
+// Дождь
+if(x.weather==="rain"){
+x.rainDrops.forEach(d=>{d.y+=d.sp*(x.spd/60);d.x-=1.5;if(d.y>H){d.y=-10;d.x=Math.random()*W}});
+}
+// Столкновения
+for(const c of x.cars)if(Math.abs(c.x-x.p.x)<(c.w+x.p.w)/2-6&&Math.abs(c.y-x.p.y)<(c.h+x.p.h)/2-8){crash();return}
+if(x.sh>0)x.sh*=.9;
+updEngine(x.spd);
+}
+
+function spawn(){
+const x=g,mid=W/2,lanes=[mid-110,mid,mid+110];
+const free=lanes.filter(l=>!x.cars.some(c=>Math.abs(c.x-l)<55&&(c.y>-80||c.y>H-80)));
+if(!free.length)return;
+const ln=free[Math.floor(Math.random()*free.length)];
+const col=["#c0392b","#2980b9","#27ae60","#d35400","#8e44ad","#16a085","#7f8c8d","#2c3e50","#34495e","#e67e22"];
+const tr=Math.random()<.15;
+const types=["sedan","sedan","suv","bmw","skyline","prius"];
+const type=tr?"truck":types[Math.floor(Math.random()*types.length)];
+const yStart=x.mode==="oncoming"?-120:-100;
+x.cars.push({x:ln,y:yStart,w:tr?50:42,h:tr?100:70,c:tr?"#5d6d7e":col[Math.floor(Math.random()*col.length)],rs:.5+Math.random()*.4,ot:0,tr,type});
+}
+
+function draw(){
+const x=g;ctx.save();
+if(x.sh>.5)ctx.translate((Math.random()-.5)*x.sh,(Math.random()-.5)*x.sh);
+ctx.fillStyle="#0a0a0a";ctx.fillRect(0,0,W,H);
+const sideW=70;
+// Ночной режим при дожде
+const rainDark=x.weather==="rain";
+ctx.fillStyle=rainDark?"#0d1a0d":"#1a3a1a";ctx.fillRect(0,0,sideW,H);ctx.fillRect(W-sideW,0,sideW,H);
+ctx.fillStyle="#333";ctx.fillRect(sideW,0,6,H);ctx.fillRect(W-sideW-6,0,6,H);
+ctx.fillStyle=rainDark?"#2a2a2a":"#3a3a3a";ctx.fillRect(sideW+6,0,W-(sideW+6)*2,H);
+ctx.fillStyle="#333";for(let i=0;i<14;i++){const y=(i*60+x.rs*2)%(H+60)-60;ctx.fillRect(sideW+6,y,W-(sideW+6)*2,2)}
+ctx.fillStyle="#f1c40f";ctx.fillRect(sideW+12,0,4,H);ctx.fillRect(W-sideW-16,0,4,H);
+ctx.fillStyle="#ddd";const dof=(x.rs*2)%60;for(let i=0;i<18;i++){const y=i*60-dof;ctx.fillRect(W/2-55,y,3,32);ctx.fillRect(W/2+52,y,3,32)}
+
+if(x.view==="fp"){
+drawFirstPerson();
 }else{
-ctx.moveTo(-w/2+r,-h/2);
-ctx.lineTo(w/2-r,-h/2);
-ctx.quadraticCurveTo(w/2,-h/2,w/2,-h/2+r);
-ctx.lineTo(w/2,h/2-r);
-ctx.quadraticCurveTo(w/2,h/2,w/2-r,h/2);
-ctx.lineTo(-w/2+r,h/2);
-ctx.quadraticCurveTo(-w/2,h/2,-w/2,h/2-r);
-ctx.lineTo(-w/2,-h/2+r);
-ctx.quadraticCurveTo(-w/2,-h/2,-w/2+r,-h/2);
-}
-ctx.closePath();
-
-var bg=ctx.createLinearGradient(-w/2,0,w/2,0);
-bg.addColorStop(0,'#5a5a65');
-bg.addColorStop(0.15,color);
-bg.addColorStop(0.35,'#fff');
-bg.addColorStop(0.5,color);
-bg.addColorStop(0.7,'#2a2a35');
-bg.addColorStop(0.85,color);
-bg.addColorStop(1,'#4a4a55');
-ctx.fillStyle=bg;ctx.fill();
-
-if(accent&&!rainbowMode){
-ctx.fillStyle=accent;
-ctx.fillRect(-w*0.15,-h/2,w*0.1,h);
-ctx.fillRect(w*0.05,-h/2,w*0.1,h);
+x.cars.forEach(c=>drawCar(c.x,c.y,c.w,c.h,c.c,c.type,0,0));
+drawCar(x.p.x,x.p.y,x.p.w,x.p.h,x.p.color,x.p.type,x.p.ti,1);
 }
 
-ctx.fillStyle='rgba(15,20,30,.95)';
+// Дождь
+if(x.weather==="rain"){
+ctx.strokeStyle="rgba(150,200,255,.6)";ctx.lineWidth=1.5;
+x.rainDrops.forEach(d=>{
+ctx.beginPath();ctx.moveTo(d.x,d.y);ctx.lineTo(d.x-2,d.y+d.len);ctx.stroke();
+});
+// Брызги на лобовом
+ctx.fillStyle="rgba(150,200,255,.08)";
+ctx.beginPath();ctx.arc(W*0.3,H*0.4,40,0,7);ctx.fill();
+ctx.beginPath();ctx.arc(W*0.7,H*0.3,30,0,7);ctx.fill();
+}
+
+hud();ctx.restore();
+}
+
+// ===== ВИД ОТ 1-ГО ЛИЦА =====
+function drawFirstPerson(){
+const x=g;
+const horizon=H*0.35;
+// Небо
+const skyGrad=ctx.createLinearGradient(0,0,0,horizon);
+if(x.weather==="rain"){skyGrad.addColorStop(0,"#1a1a2e");skyGrad.addColorStop(1,"#2c2c3e");}
+else{skyGrad.addColorStop(0,"#87ceeb");skyGrad.addColorStop(1,"#b0e0ff");}
+ctx.fillStyle=skyGrad;ctx.fillRect(0,0,W,horizon);
+// Дорога — сужается к горизонту (перспектива)
+const roadTopL=W/2-40,roadTopR=W/2+40;
+const roadBotL=70,roadBotR=W-70;
+ctx.fillStyle=x.weather==="rain"?"#2a2a2a":"#3a3a3a";
+ctx.beginPath();ctx.moveTo(roadTopL,horizon);ctx.lineTo(roadTopR,horizon);ctx.lineTo(roadBotR,H);ctx.lineTo(roadBotL,H);ctx.closePath();ctx.fill();
+// Разметка (перспективная)
+ctx.strokeStyle="#f1c40f";ctx.lineWidth=2;
+ctx.beginPath();ctx.moveTo(roadTopL+8,horizon);ctx.lineTo(roadBotL+12,H);ctx.stroke();
+ctx.beginPath();ctx.moveTo(roadTopR-8,horizon);ctx.lineTo(roadBotR-12,H);ctx.stroke();
+// Центральный пунктир (движется)
+ctx.strokeStyle="#ddd";ctx.lineWidth=3;
+const dashScroll=(x.rs*4)%80;
+for(let i=0;i<12;i++){
+const t=i/12;
+const y=horizon+(H-horizon)*t+ (dashScroll/80)*(H-horizon)/12;
+const scale=0.1+t*0.9;
+const cx=W/2;
+const w=3*scale;
+const len=15*scale;
+ctx.fillRect(cx-w/2,y,w,len);
+}
+
+// Машины — рисуем с перспективой
+x.cars.forEach(c=>{
+// Маппинг позиции на экран: y от 0 (далеко) до H (близко)
+const t=Math.min(1,Math.max(0,(c.y+100)/H));
+const scale=0.2+t*1.2;
+const screenY=horizon+(H-horizon)*(c.y/H);
+const centerX=(c.x/W)*(roadBotR-roadBotL)+roadBotL;
+const centerTopX=(c.x/W)*(roadTopR-roadTopL)+roadTopL;
+const finalX=centerX*(t)+centerTopX*(1-t);
+const finalW=c.w*scale*1.6;
+const finalH=c.h*scale*1.6;
+if(c.y>-50&&c.y<H){
+drawCar(finalX,screenY,finalW,finalH,c.c,c.type,0,0);
+}
+});
+
+// Капот игрока (вид от 1-го лица)
+const car=getCar();
+ctx.fillStyle=car.color;
 ctx.beginPath();
-ctx.moveTo(-w/2+7,-h/2+9);
-ctx.lineTo(w/2-7,-h/2+9);
-ctx.lineTo(w/2-10,-h/2+22);
-ctx.lineTo(-w/2+10,-h/2+22);
+ctx.moveTo(W*0.15,H);
+ctx.lineTo(W*0.2,H*0.72);
+ctx.lineTo(W*0.8,H*0.72);
+ctx.lineTo(W*0.85,H);
 ctx.closePath();ctx.fill();
-
-ctx.fillStyle=color;
-ctx.fillRect(-w/2+7,-h/2+22,w-14,10);
-
-ctx.fillStyle='rgba(15,20,30,.85)';
+// Детали капота
+ctx.fillStyle="rgba(0,0,0,.3)";
+ctx.fillRect(W*0.25,H*0.75,W*0.5,4);
+ctx.fillStyle="rgba(0,0,0,.2)";
+ctx.fillRect(W*0.3,H*0.8,W*0.4,3);
+// Дворники при дожде
+if(x.weather==="rain"){
+ctx.strokeStyle="#111";ctx.lineWidth=3;
 ctx.beginPath();
-ctx.moveTo(-w/2+9,h/2-28);
-ctx.lineTo(w/2-9,h/2-28);
-ctx.lineTo(w/2-7,h/2-14);
-ctx.lineTo(-w/2+7,h/2-14);
-ctx.closePath();ctx.fill();
-
-ctx.fillStyle='#fff9c4';
-ctx.beginPath();ctx.ellipse(-w/2+8,-h/2+3,5,3,0,0,7);ctx.fill();
-ctx.beginPath();ctx.ellipse(w/2-8,-h/2+3,5,3,0,0,7);ctx.fill();
-
-ctx.fillStyle='#c62828';
-ctx.fillRect(-w/2+4,h/2-6,7,4);
-ctx.fillRect(w/2-11,h/2-6,7,4);
-
-ctx.fillStyle='#0a0a0a';
-ctx.fillRect(-w/2-3,-h/2+12,6,18);
-ctx.fillRect(w/2-3,-h/2+12,6,18);
-ctx.fillRect(-w/2-3,h/2-22,6,18);
-ctx.fillRect(w/2-3,h/2-22,6,18);
-
-ctx.strokeStyle='rgba(255,255,255,.2)';
-ctx.lineWidth=1;
-ctx.strokeRect(-w/2+1,-h/2+1,w-2,h-2);
-ctx.restore();
-}
-
-function drawToilet(x,y,w,h){
-ctx.save();
-ctx.translate(x,y);
-ctx.fillStyle='rgba(0,0,0,.45)';
-ctx.beginPath();ctx.ellipse(3,4,w*0.6,h*0.5,0,0,7);ctx.fill();
-ctx.fillStyle='#f0f0f0';
-ctx.fillRect(-w/2,-h/2,w,h*0.35);
-ctx.strokeStyle='#999';ctx.lineWidth=2;
-ctx.strokeRect(-w/2,-h/2,w,h*0.35);
-ctx.beginPath();
-ctx.ellipse(0,h*0.2,w*0.55,h*0.35,0,0,7);
-ctx.fillStyle='#e8e8e8';ctx.fill();
-ctx.strokeStyle='#666';ctx.lineWidth=2;ctx.stroke();
-ctx.fillStyle='#ffcc99';
-ctx.beginPath();ctx.arc(0,-h/2-6,w*0.38,0,7);ctx.fill();
-ctx.fillStyle='#333';
-ctx.beginPath();ctx.arc(0,-h/2-8,w*0.38,Math.PI,0);ctx.fill();
-ctx.fillStyle='#fff';
-ctx.beginPath();ctx.arc(-6,-h/2-6,4,0,7);ctx.fill();
-ctx.beginPath();ctx.arc(6,-h/2-6,4,0,7);ctx.fill();
-ctx.fillStyle='#000';
-ctx.beginPath();ctx.arc(-6,-h/2-6,2,0,7);ctx.fill();
-ctx.beginPath();ctx.arc(6,-h/2-6,2,0,7);ctx.fill();
-ctx.restore();
-   }function draw(){
-if(W<=0||H<=0)return;
-if(gameMode==='overtake')drawOvertake();
-else if(gameMode==='offroad')drawOffroad();
-else if(gameMode==='secret')drawSecret();
-drawFloats();
-}
-
-function drawOvertake(){
-if(rainbowMode){
-ctx.fillStyle='hsl('+rainbowHue+',70%,25%)';
-ctx.fillRect(0,0,W,H);
-}else{
-ctx.fillStyle=sky();
-ctx.fillRect(0,0,W,H);
-}
-drawCity();
-
-var rw=W*0.65;
-var rx=(W-rw)/2;
-ctx.fillStyle=isNight()?'#1a1a1f':'#2a2a2e';
-ctx.fillRect(rx,0,rw,H);
-ctx.fillStyle='#fff';
-ctx.fillRect(rx-4,0,4,H);
-ctx.fillRect(rx+rw,0,4,H);
-
-ctx.strokeStyle=isNight()?'#444':'#666';
-ctx.setLineDash([15,15]);
-ctx.lineWidth=2;
-ctx.beginPath();ctx.moveTo(rx+rw/3,0);ctx.lineTo(rx+rw/3,H);ctx.stroke();
-ctx.beginPath();ctx.moveTo(rx+rw*2/3,0);ctx.lineTo(rx+rw*2/3,H);ctx.stroke();
-ctx.setLineDash([]);
-
-ctx.fillStyle=isNight()?'rgba(200,180,0,.5)':'#ffeb3b';
-for(var i=0;i<lines.length;i++){
-ctx.fillRect(W/2-3,lines[i].y,6,45);
-}
-
-for(i=0;i<enemies.length;i++){
-var e=enemies[i];
-if(skibidiMode&&e.skibidi)drawToilet(e.x,e.y,e.w,e.h);
-else drawCar(e.x,e.y,e.w,e.h,e.c,null,0,e.t,false);
-if(e.warningActive){
-var blink=(Math.floor(e.warningTimer*10)%2===0);
-if(blink){
-var dir=e.targetLane>e.lane?1:-1;
-ctx.save();
-ctx.fillStyle='#ffcc00';
-ctx.strokeStyle='#000';
-ctx.lineWidth=3;
-var ax=e.x+dir*35;
-var ay=e.y;
-ctx.beginPath();
-if(dir>0){
-ctx.moveTo(ax-10,ay-15);
-ctx.lineTo(ax+10,ay);
-ctx.lineTo(ax-10,ay+15);
-}else{
-ctx.moveTo(ax+10,ay-15);
-ctx.lineTo(ax-10,ay);
-ctx.lineTo(ax+10,ay+15);
-}
-ctx.closePath();
-ctx.fill();
+const wiperAngle=Math.sin(Date.now()/300)*0.3;
+ctx.moveTo(W*0.3,H*0.72);
+ctx.lineTo(W*0.3+Math.cos(-0.8+wiperAngle)*120,H*0.72+Math.sin(-0.8+wiperAngle)*60);
 ctx.stroke();
+ctx.beginPath();
+ctx.moveTo(W*0.7,H*0.72);
+ctx.lineTo(W*0.7-Math.cos(-0.8+wiperAngle)*120,H*0.72+Math.sin(-0.8+wiperAngle)*60);
+ctx.stroke();
+}
+// Руль (вид от 1-го лица)
+ctx.strokeStyle="rgba(0,0,0,.7)";ctx.lineWidth=8;
+ctx.beginPath();ctx.arc(W/2,H+80,120,Math.PI,0);ctx.stroke();
+ctx.fillStyle="rgba(20,20,20,.9)";
+ctx.beginPath();ctx.arc(W/2,H+80,40,Math.PI,0);ctx.fill();
+}
+
+// ===== РЕАЛИСТИЧНЫЕ МАШИНЫ (вид сверху) =====
+function drawCar(x,y,w,h,col,type="sedan",ti=0,pl=0){
+ctx.save();ctx.translate(x,y);if(ti)ctx.rotate(ti*.05);
+ctx.fillStyle="rgba(0,0,0,.55)";rr(-w/2+3,-h/2+3,w,h,6);ctx.fill();
+
+if(type==="prius"){
+const body="#e8f0e8",roof="#f5f5f5",glass="#4a6a7a";
+ctx.fillStyle=col;rr(-w/2,-h/2,w,h,8);ctx.fill();
+ctx.fillStyle=body;rr(-w/2+3,-h/2+3,w-6,h-6,7);ctx.fill();
+ctx.fillStyle=glass;rr(-w/2+5,-h/2+4,w-10,14,4);ctx.fill();
+ctx.fillStyle=glass;rr(-w/2+5,h/2-18,w-10,14,4);ctx.fill();
+ctx.fillStyle=roof;rr(-w/2+6,-h/2+20,w-12,h-42,3);ctx.fill();
+ctx.fillStyle="rgba(0,0,0,.15)";ctx.fillRect(-w/2+6,-h/2+32,w-12,2);
+ctx.fillStyle=body;ctx.fillRect(-w/2-2,-h/2+16,3,5);ctx.fillRect(w/2-1,-h/2+16,3,5);
+ctx.fillStyle="#fff";ctx.fillRect(-w/2+4,-h/2+1,8,3);ctx.fillRect(w/2-12,-h/2+1,8,3);
+ctx.fillStyle=pl?"#ff5555":"#c0392b";ctx.fillRect(-w/2+3,h/2-4,7,3);ctx.fillRect(w/2-10,h/2-4,7,3);
+ctx.fillStyle="#111";ctx.fillRect(-w/2-1,-h/2+8,3,12);ctx.fillRect(w/2-2,-h/2+8,3,12);ctx.fillRect(-w/2-1,h/2-22,3,12);ctx.fillRect(w/2-2,h/2-22,3,12);
+ctx.strokeStyle="rgba(0,0,0,.4)";ctx.lineWidth=1;rr(-w/2,-h/2,w,h,8);ctx.stroke();
+}
+else if(type==="skyline"){
+const glass="#1a2a3a";
+ctx.fillStyle=col;rr(-w/2,-h/2,w,h,5);ctx.fill();
+ctx.fillStyle="#2c5a8c";rr(-w/2+2,-h/2+2,w-4,18,3);ctx.fill();
+ctx.fillStyle="#111";ctx.fillRect(-w/2+8,-h/2+6,w-16,4);
+ctx.fillStyle=glass;ctx.beginPath();ctx.moveTo(-w/2+4,-h/2+20);ctx.lineTo(w/2-4,-h/2+20);ctx.lineTo(w/2-6,-h/2+34);ctx.lineTo(-w/2+6,-h/2+34);ctx.closePath();ctx.fill();
+ctx.fillStyle="#3a6a9c";rr(-w/2+5,-h/2+34,w-10,h-58,3);ctx.fill();
+ctx.fillStyle=glass;ctx.beginPath();ctx.moveTo(-w/2+6,h/2-24);ctx.lineTo(w/2-6,h/2-24);ctx.lineTo(w/2-4,h/2-10);ctx.lineTo(-w/2+4,h/2-10);ctx.closePath();ctx.fill();
+ctx.fillStyle="#0a0a0a";ctx.fillRect(-w/2+2,h/2-9,w-4,4);
+ctx.fillStyle="#1a1a1a";ctx.fillRect(-w/2+6,h/2-6,w-12,2);
+ctx.fillStyle="#111";ctx.fillRect(-w/2-2,-h/2+22,3,4);ctx.fillRect(w/2-1,-h/2+22,3,4);
+ctx.fillStyle="#fff";ctx.fillRect(-w/2+3,-h/2+1,9,4);ctx.fillRect(w/2-12,-h/2+1,9,4);
+ctx.fillStyle=pl?"#ff3333":"#8b0000";ctx.beginPath();ctx.arc(-w/2+9,h/2-4,3,0,7);ctx.fill();ctx.beginPath();ctx.arc(w/2-9,h/2-4,3,0,7);ctx.fill();
+ctx.fillStyle="#666";ctx.fillRect(-w/2+6,h/2-2,4,2);ctx.fillRect(w/2-10,h/2-2,4,2);
+ctx.fillStyle="#0a0a0a";ctx.fillRect(-w/2-1,-h/2+10,3,14);ctx.fillRect(w/2-2,-h/2+10,3,14);ctx.fillRect(-w/2-1,h/2-24,3,14);ctx.fillRect(w/2-2,h/2-24,3,14);
+ctx.strokeStyle="rgba(0,0,0,.5)";ctx.lineWidth=1;rr(-w/2,-h/2,w,h,5);ctx.stroke();
+}
+else if(type==="bmw"){
+const glass="#1a2a3a";
+ctx.fillStyle=col;rr(-w/2,-h/2,w,h,6);ctx.fill();
+ctx.fillStyle="#222";rr(-w/2+3,-h/2+2,w-6,16,4);ctx.fill();
+ctx.fillStyle=glass;rr(-w/2+5,-h/2+20,w-10,14,4);ctx.fill();
+ctx.fillStyle="#333";rr(-w/2+6,-h/2+34,w-12,h-56,3);ctx.fill();
+ctx.fillStyle=glass;rr(-w/2+5,h/2-20,w-10,12,4);ctx.fill();
+ctx.fillStyle="#4a90d9";ctx.beginPath();ctx.arc(0,-h/2+10,4,0,7);ctx.fill();
+ctx.fillStyle="#fff";ctx.fillRect(-w/2+4,-h/2+2,8,4);ctx.fillRect(w/2-12,-h/2+2,8,4);
+ctx.fillStyle=pl?"#ff5555":"#c0392b";ctx.fillRect(-w/2+4,h/2-4,8,3);ctx.fillRect(w/2-12,h/2-4,8,3);
+ctx.fillStyle="#0a0a0a";ctx.fillRect(-w/2-1,-h/2+8,3,14);ctx.fillRect(w/2-2,-h/2+8,3,14);ctx.fillRect(-w/2-1,h/2-22,3,14);ctx.fillRect(w/2-2,h/2-22,3,14);
+}
+else if(type==="mustang"){
+ctx.fillStyle=col;rr(-w/2,-h/2,w,h,6);ctx.fill();
+ctx.fillStyle="rgba(0,0,0,.4)";ctx.fillRect(-w/2+4,-h/2+12,w-8,4);
+ctx.fillStyle="rgba(0,0,0,.4)";ctx.fillRect(-w/2+4,-h/2+30,w-8,4);
+ctx.fillStyle="#1a1a1a";rr(-w/2+4,-h/2+2,w-8,10,3);ctx.fill();
+ctx.fillStyle="#2a2a2a";rr(-w/2+5,-h/2+20,w-10,14,3);ctx.fill();
+ctx.fillStyle="#2a2a2a";rr(-w/2+6,h/2-18,w-12,10,3);ctx.fill();
+ctx.fillStyle="#fff";ctx.fillRect(-w/2+3,-h/2,10,4);ctx.fillRect(w/2-13,-h/2,10,4);
+ctx.fillStyle=pl?"#ff5555":"#c0392b";ctx.fillRect(-w/2+3,h/2-5,10,4);ctx.fillRect(w/2-13,h/2-5,10,4);
+ctx.fillStyle="#0a0a0a";ctx.fillRect(-w/2-1,-h/2+8,3,14);ctx.fillRect(w/2-2,-h/2+8,3,14);ctx.fillRect(-w/2-1,h/2-22,3,14);ctx.fillRect(w/2-2,h/2-22,3,14);
+}
+else if(type==="lambo"){
+ctx.fillStyle=col;ctx.beginPath();
+ctx.moveTo(-w/2+2,-h/2);ctx.lineTo(w/2-2,-h/2);ctx.lineTo(w/2,h/2);ctx.lineTo(-w/2,h/2);ctx.closePath();ctx.fill();
+ctx.fillStyle="#111";rr(-w/2+3,-h/2+2,w-6,16,3);ctx.fill();
+ctx.fillStyle="#222";ctx.beginPath();ctx.moveTo(-w/2+5,-h/2+20);ctx.lineTo(w/2-5,-h/2+20);ctx.lineTo(w/2-7,-h/2+34);ctx.lineTo(-w/2+7,-h/2+34);ctx.closePath();ctx.fill();
+ctx.fillStyle="#222";ctx.beginPath();ctx.moveTo(-w/2+7,h/2-22);ctx.lineTo(w/2-7,h/2-22);ctx.lineTo(w/2-5,h/2-8);ctx.lineTo(-w/2+5,h/2-8);ctx.closePath();ctx.fill();
+ctx.fillStyle="#0a0a0a";ctx.fillRect(-w/2+1,h/2-12,w-2,5);
+ctx.fillStyle="#fff";ctx.fillRect(-w/2+2,-h/2,10,4);ctx.fillRect(w/2-12,-h/2,10,4);
+ctx.fillStyle=pl?"#ff3333":"#8b0000";ctx.fillRect(-w/2+2,h/2-4,10,3);ctx.fillRect(w/2-12,h/2-4,10,3);
+ctx.fillStyle="#0a0a0a";ctx.fillRect(-w/2-1,-h/2+8,3,14);ctx.fillRect(w/2-2,-h/2+8,3,14);ctx.fillRect(-w/2-1,h/2-22,3,14);ctx.fillRect(w/2-2,h/2-22,3,14);
+}
+else{
+// SUV / sedan / truck
+ctx.fillStyle=col;rr(-w/2,-h/2,w,h,5);ctx.fill();
+ctx.fillStyle="rgba(0,0,0,.4)";rr(-w/2+5,-h/2+18,w-10,h-34,3);ctx.fill();
+ctx.fillStyle="rgba(150,200,255,.5)";rr(-w/2+6,-h/2+8,w-12,10,2);ctx.fill();
+ctx.fillStyle="rgba(150,200,255,.3)";rr(-w/2+6,h/2-18,w-12,8,2);ctx.fill();
+ctx.fillStyle="#fff";ctx.fillRect(-w/2+4,-h/2,7,5);ctx.fillRect(w/2-11,-h/2,7,5);
+ctx.fillStyle=pl?"#ff6b6b":"#e74c3c";ctx.fillRect(-w/2+4,h/2-5,7,5);ctx.fillRect(w/2-11,h/2-5,7,5);
+ctx.fillStyle="#0a0a0a";ctx.fillRect(-w/2-1,-h/2+8,3,13);ctx.fillRect(w/2-2,-h/2+8,3,13);ctx.fillRect(-w/2-1,h/2-21,3,13);ctx.fillRect(w/2-2,h/2-21,3,13);
+}
 ctx.restore();
 }
+
+function rr(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath()}
+
+// ===== HUD =====
+function hud(){
+const x=g;ctx.textAlign="left";
+ctx.fillStyle="rgba(0,0,0,.65)";ctx.fillRect(10,10,110,46);
+ctx.fillStyle="#f1c40f";ctx.font="bold 22px 'Courier New'";ctx.fillText(Math.round(x.spd),18,40);
+ctx.fillStyle="#aaa";ctx.font="10px 'Courier New'";ctx.fillText("км/ч",72,40);
+ctx.fillStyle="rgba(0,0,0,.65)";ctx.fillRect(W-155,10,145,46);
+ctx.fillStyle="#2ecc71";ctx.font="bold 16px 'Courier New'";ctx.fillText("🏆 "+x.sc,W-145,30);
+ctx.fillStyle="#aaa";ctx.font="10px 'Courier New'";ctx.fillText("Обгоны: "+x.ov,W-145,48);
+ctx.fillStyle="rgba(0,0,0,.65)";ctx.fillRect(W-100,64,90,26);
+ctx.fillStyle="#f1c40f";ctx.font="bold 13px 'Courier New'";ctx.fillText("💰 "+Math.floor(x.sc/5),W-90,82);
+if(x.weather==="rain"){
+ctx.fillStyle="rgba(100,150,255,.4)";ctx.fillRect(10,64,90,22);
+ctx.fillStyle="#9cf";ctx.font="bold 11px 'Courier New'";ctx.fillText("🌧️ ДОЖДЬ",20,80);
 }
-}
-if(P){
-if(f1Mode){
-var scale=sizeBoost?2:1;
-drawF1Car(P.x,P.y,P.w*scale,P.h*scale);
-}else{
-var c=CARS[S.active];
-var carColor=c.c;
-if(c.isRBR)carColor='#1a237e';
-if(rainbowMode)carColor=rainbowColor(0);
-var scale2=sizeBoost?2:1;
-drawCar(P.x,P.y,P.w*scale2,P.h*scale2,carColor,c.ac,0,c.t,true);
+if(x.mode==="oncoming"){
+ctx.fillStyle="rgba(233,69,96,.5)";ctx.fillRect(10,92,120,22);
+ctx.fillStyle="#fff";ctx.font="bold 11px 'Courier New'";ctx.fillText("🏁 ВСТРЕЧКА",20,108);
 }
 }
 
-if(isNight()&&!rainbowMode){
-ctx.fillStyle='rgba(10,10,40,.4)';
-ctx.fillRect(0,0,W,H);
-}else if(isEve()&&!rainbowMode){
-ctx.fillStyle='rgba(255,100,20,.1)';
-ctx.fillRect(0,0,W,H);
-}
-
-if(beanBonus){
-ctx.fillStyle='rgba(255,204,0,.9)';
-ctx.font='bold 14px sans-serif';
-ctx.textAlign='center';
-ctx.fillText('⭐ x2 АКТИВЕН',W/2,60);
-}
-if(f1Mode){
-ctx.fillStyle='rgba(255,214,0,.95)';
-ctx.font='bold 15px sans-serif';
-ctx.textAlign='center';
-ctx.fillText('🏁 RED BULL x31',W/2,80);
-}
-}
-
-function drawOffroad(){
-ctx.fillStyle=sky();
-ctx.fillRect(0,0,W,H);
-drawOffroadBg();
-drawPits();
-if(P)drawPickup(P.x,P.y,P.w,P.h);
-if(isNight()){
-ctx.fillStyle='rgba(10,10,40,.35)';
-ctx.fillRect(0,0,W,H);
-}
-if(dist<1000&&dist>800){
-ctx.fillStyle='rgba(180,80,255,.8)';
-ctx.font='bold 13px sans-serif';
-ctx.textAlign='center';
-ctx.fillText('⚠️ Впереди что-то странное...',W/2,70);
-}
-}
-
-function drawFloats(){
-ctx.font='bold 18px sans-serif';
-ctx.textAlign='center';
-for(var i=0;i<floats.length;i++){
-var f=floats[i];
-ctx.globalAlpha=f.l;
-ctx.fillStyle='#ffeb3b';
-ctx.fillText(f.t,f.x,f.y);
-f.y-=1.5;
-f.l-=0.02;
-}
-ctx.globalAlpha=1;
-floats=floats.filter(function(f){return f.l>0;});
-}
-
-var lt=performance.now();
-function loop(n){
-var dt=Math.min((n-lt)/1000,.05);
-lt=n;
-if(W<=0||H<=0)resize();
-update(dt);
-draw();
-requestAnimationFrame(loop);
-}
-
-resize();
-showMenu();
-updateClownHud();
-bind($('bl'),'l');
-bind($('br'),'r');
-bind($('pg'),'gas');
-bind($('pb'),'brk');
-requestAnimationFrame(loop);
-
-setInterval(function(){
-if(S.beanDone)return;
-if(S.coins<50)return;
-if(Math.random()<0.3){
-S.beanDone=true;
+// ===== АВАРИЯ =====
+function crash(){
+const x=g;x.run=0;x.sh=30;stopEngine();beep(120,.4,"sawtooth",.2);setTimeout(()=>beep(80,.3,"sawtooth",.15),50);
+ctx.fillStyle="rgba(255,100,0,.6)";ctx.beginPath();ctx.arc(x.p.x,x.p.y,45,0,7);ctx.fill();
+const e=Math.floor(x.sc/5);coins+=e;
+stats.totalCoins+=e;stats.totalOvertakes+=x.ov;stats.crashes++;saveStats();
+if(x.mode==="oncoming"&&x.sc>stats.oncomingBest)stats.oncomingBest=x.sc;
+if(x.mode==="overtake"&&x.sc>best){best=x.sc;localStorage.setItem("otB",best)}
 save();
-showMrBean();
+setTimeout(()=>{
+document.getElementById("finalOvertakes").textContent=x.ov;
+document.getElementById("finalScore").textContent=x.sc;
+document.getElementById("finalSpeed").textContent=Math.round(x.spd);
+document.getElementById("earnedCoins").textContent=e;
+document.getElementById("gameover").classList.remove("hidden");
+},400);
 }
-},10000);
-
-window.addEventListener('resize',resize);
-window.addEventListener('orientationchange',
-function(){setTimeout(resize,200);});
 </script>
 </body>
 </html>
