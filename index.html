@@ -93,13 +93,13 @@ canvas{display:block;width:100%;height:auto;border-radius:8px;touch-action:none;
 <button class="btn blue" onclick="showScreen('scMenu')">↩ НАЗАД</button>
 </div>
 
-<!-- ВЫБОР ВИДА -->
+<!-- ВЫБОР РЕЖИМА -->
 <div class="overlay hidden" id="viewSelect">
-<div style="font-size:18px;color:#e94560;font-weight:bold;margin-bottom:8px">🎮 ВЫБОР ВИДА</div>
-<div style="font-size:12px;color:#aaa;margin-bottom:12px">Как смотришь на дорогу?</div>
+<div style="font-size:18px;color:#e94560;font-weight:bold;margin-bottom:8px">🎮 РЕЖИМ</div>
+<div style="font-size:12px;color:#aaa;margin-bottom:12px">Как едешь?</div>
 <div class="toggle-view">
-<button id="vTop" class="active" onclick="setView('top')">🗺️ Сверху</button>
-<button id="vFp" onclick="setView('fp')">🚗 От 1-го лица</button>
+<button id="vTop" class="active" onclick="setView('top')">☀️ ДЕНЬ</button>
+<button id="vFp" onclick="setView('night')">🌙 НОЧЬ</button>
 </div>
 <div style="font-size:12px;color:#f1c40f;margin:10px 0">🌧️ Погода: <span id="weatherPreview">ясно</span></div>
 <button class="btn green" onclick="confirmStart()">▶ НАЧАТЬ</button>
@@ -157,8 +157,6 @@ canvas{display:block;width:100%;height:auto;border-radius:8px;touch-action:none;
 <div class="coin" style="margin-top:10px">+💰 <span id="earnedCoins">0</span></div>
 <button class="btn green" style="margin-top:14px" onclick="restartGame()">🔄 ЗАНОВО</button>
 <button class="btn blue" onclick="backToMenu()">🏠 В МЕНЮ</button>
-</div>
-
 </div><script>
 // ===== АУДИО =====
 let AC=null,S=true,eO=null,eG=null;
@@ -246,7 +244,7 @@ L.appendChild(d)});
 function buyUp(it){const lv=up[it.id]||0;if(lv>=it.max||coins<it.price)return;coins-=it.price;up[it.id]=lv+1;save();beep(660,.1,"sine",.1);setTimeout(()=>beep(990,.15,"sine",.1),80);renderShop()}
 function buyCar(c){if(up.car===c.id)return;if(c.price>0){if(coins<c.price)return;coins-=c.price}up.car=c.id;save();beep(660,.1,"sine",.1);setTimeout(()=>beep(990,.15,"sine",.1),80);setTimeout(()=>beep(1320,.2,"sine",.1),160);renderShop()}
 
-// ===== ВЫБОР ВИДА + ПОГОДА =====
+// ===== ВЫБОР РЕЖИМА + ПОГОДА =====
 function startMode(m){
 mode=m;
 document.getElementById("viewSelect").classList.remove("hidden");
@@ -258,7 +256,7 @@ document.getElementById("weatherPreview").textContent=weather==="rain"?"🌧️ 
 function setView(v){
 view=v;
 document.getElementById("vTop").classList.toggle("active",v==="top");
-document.getElementById("vFp").classList.toggle("active",v==="fp");
+document.getElementById("vFp").classList.toggle("active",v==="night");
 beep(440,.05);
 }
 function confirmStart(){
@@ -287,7 +285,7 @@ const car=getCar(),s=car.stats;
 g={run:1,mode:mode,view:view,weather:weather,
 p:{x:W/2,y:H-110,w:40,h:66,sp:5.5*(1+(up.grip||0)*0.08)*s.grip,tx:W/2,ti:0,color:car.color,type:car.type},
 cars:[],sc:0,ov:0,spd:60,bs:4*s.accel,ms:(200+(up.fuel||0)*15+s.maxBonus),
-st:0,si:70,k:{l:0,r:0},sh:0,mg:(1+(up.magnet||0)*0.25)*s.coinBonus,rs:0,rainDrops:[]};
+st:0,si:70,k:{l:0,r:0},sh:0,mg:(1+(up.magnet||0)*0.25)*s.coinBonus,rs:0,rainDrops:[],flicker:0};
 if(g.weather==="rain"){for(let i=0;i<80;i++)g.rainDrops.push({x:Math.random()*W,y:Math.random()*H,sp:8+Math.random()*6,len:8+Math.random()*10});}
 stats.totalGames++;saveStats();
 setup();startEngine();loop();
@@ -326,6 +324,7 @@ x.cars.forEach(c=>{if(x.mode==="oncoming")c.y+=sf*c.rs*1.8;else c.y+=sf*c.rs;});
 x.cars=x.cars.filter(c=>c.y<H+120&&c.y>-200);
 x.cars.forEach(c=>{if(!c.ot&&c.y>x.p.y+30){c.ot=1;x.ov++;const pts=x.mode==="oncoming"?Math.floor((15+x.spd/15)*x.mg):Math.floor((10+x.spd/20)*x.mg);x.sc+=pts;beep(880,.08,"square",.06);}});
 if(x.weather==="rain"){x.rainDrops.forEach(d=>{d.y+=d.sp*(x.spd/60);d.x-=1.5;if(d.y>H){d.y=-10;d.x=Math.random()*W}});}
+if(x.view==="night")x.flicker=Math.random()*0.12;
 for(const c of x.cars)if(Math.abs(c.x-x.p.x)<(c.w+x.p.w)/2-6&&Math.abs(c.y-x.p.y)<(c.h+x.p.h)/2-8){crash();return}
 if(x.sh>0)x.sh*=.9;
 updEngine(x.spd);
@@ -347,74 +346,89 @@ x.cars.push({x:ln,y:yStart,w:tr?50:42,h:tr?100:70,c:tr?"#5d6d7e":col[Math.floor(
 function draw(){
 const x=g;ctx.save();
 if(x.sh>.5)ctx.translate((Math.random()-.5)*x.sh,(Math.random()-.5)*x.sh);
-ctx.fillStyle="#0a0a0a";ctx.fillRect(0,0,W,H);
+
+const isNight=x.view==="night";
+const isRain=x.weather==="rain";
+
+ctx.fillStyle=isNight?"#02020a":"#0a0a0a";ctx.fillRect(0,0,W,H);
 const sideW=70;
-const rainDark=x.weather==="rain";
-ctx.fillStyle=rainDark?"#0d1a0d":"#1a3a1a";ctx.fillRect(0,0,sideW,H);ctx.fillRect(W-sideW,0,sideW,H);
+
+ctx.fillStyle=isNight?"#051005":(isRain?"#0d1a0d":"#1a3a1a");
+ctx.fillRect(0,0,sideW,H);ctx.fillRect(W-sideW,0,sideW,H);
+
 ctx.fillStyle="#333";ctx.fillRect(sideW,0,6,H);ctx.fillRect(W-sideW-6,0,6,H);
-ctx.fillStyle=rainDark?"#2a2a2a":"#3a3a3a";ctx.fillRect(sideW+6,0,W-(sideW+6)*2,H);
-ctx.fillStyle="#333";for(let i=0;i<14;i++){const y=(i*60+x.rs*2)%(H+60)-60;ctx.fillRect(sideW+6,y,W-(sideW+6)*2,2)}
-ctx.fillStyle="#f1c40f";ctx.fillRect(sideW+12,0,4,H);ctx.fillRect(W-sideW-16,0,4,H);
-ctx.fillStyle="#ddd";const dof=(x.rs*2)%60;for(let i=0;i<18;i++){const y=i*60-dof;ctx.fillRect(W/2-55,y,3,32);ctx.fillRect(W/2+52,y,3,32)}
 
-if(x.view==="fp"){drawFirstPerson();}
-else{x.cars.forEach(c=>drawCar(c.x,c.y,c.w,c.h,c.c,c.type,0,0));drawCar(x.p.x,x.p.y,x.p.w,x.p.h,x.p.color,x.p.type,x.p.ti,1);}
+ctx.fillStyle=isNight?"#0d0d0d":(isRain?"#2a2a2a":"#3a3a3a");
+ctx.fillRect(sideW+6,0,W-(sideW+6)*2,H);
 
-if(x.weather==="rain"){
+ctx.fillStyle=isNight?"#080808":"#333";
+for(let i=0;i<14;i++){const y=(i*60+x.rs*2)%(H+60)-60;ctx.fillRect(sideW+6,y,W-(sideW+6)*2,2)}
+
+// Разметка
+ctx.fillStyle=isNight?"#ffe600":"#f1c40f";
+ctx.shadowColor=isNight?"#ffe600":"transparent";
+ctx.shadowBlur=isNight?12:0;
+ctx.fillRect(sideW+12,0,4,H);ctx.fillRect(W-sideW-16,0,4,H);
+ctx.shadowBlur=0;
+
+// Пунктир
+ctx.fillStyle=isNight?"#c0c0ff":"#ddd";
+ctx.shadowColor=isNight?"#a0a0ff":"transparent";
+ctx.shadowBlur=isNight?8:0;
+const dof=(x.rs*2)%60;
+for(let i=0;i<18;i++){const y=i*60-dof;ctx.fillRect(W/2-55,y,3,32);ctx.fillRect(W/2+52,y,3,32)}
+ctx.shadowBlur=0;
+
+// Ночной конус света от фар игрока
+if(isNight){
+const px=x.p.x,py=x.p.y;
+const grad=ctx.createRadialGradient(px,py,20,px,py,320);
+grad.addColorStop(0,"rgba(255,240,180,0.35)");
+grad.addColorStop(0.5,"rgba(255,220,120,0.15)");
+grad.addColorStop(1,"rgba(255,200,80,0)");
+ctx.fillStyle=grad;
+ctx.beginPath();
+ctx.moveTo(px-20,py);
+ctx.lineTo(px-260,0);
+ctx.lineTo(px+260,0);
+ctx.lineTo(px+20,py);
+ctx.closePath();
+ctx.fill();
+if(x.flicker>0.08){ctx.fillStyle="rgba(255,255,200,"+x.flicker+")";ctx.fillRect(0,0,W,py);}
+}
+
+// Машины
+x.cars.forEach(c=>drawCar(c.x,c.y,c.w,c.h,c.c,c.type,0,0,isNight));
+drawCar(x.p.x,x.p.y,x.p.w,x.p.h,x.p.color,x.p.type,x.p.ti,1,isNight);
+
+// Дождь
+if(isRain){
 ctx.strokeStyle="rgba(150,200,255,.6)";ctx.lineWidth=1.5;
 x.rainDrops.forEach(d=>{ctx.beginPath();ctx.moveTo(d.x,d.y);ctx.lineTo(d.x-2,d.y+d.len);ctx.stroke();});
-ctx.fillStyle="rgba(150,200,255,.08)";
-ctx.beginPath();ctx.arc(W*0.3,H*0.4,40,0,7);ctx.fill();
-ctx.beginPath();ctx.arc(W*0.7,H*0.3,30,0,7);ctx.fill();
 }
+
+// Ночная виньетка
+if(isNight){
+const vg=ctx.createRadialGradient(W/2,H/2,H*0.25,W/2,H/2,H*0.75);
+vg.addColorStop(0,"rgba(0,0,0,0)");
+vg.addColorStop(1,"rgba(0,0,0,0.65)");
+ctx.fillStyle=vg;ctx.fillRect(0,0,W,H);
+}
+
 hud();ctx.restore();
 }
 
-function drawFirstPerson(){
-const x=g;
-const horizon=H*0.35;
-const skyGrad=ctx.createLinearGradient(0,0,0,horizon);
-if(x.weather==="rain"){skyGrad.addColorStop(0,"#1a1a2e");skyGrad.addColorStop(1,"#2c2c3e");}
-else{skyGrad.addColorStop(0,"#87ceeb");skyGrad.addColorStop(1,"#b0e0ff");}
-ctx.fillStyle=skyGrad;ctx.fillRect(0,0,W,horizon);
-const roadTopL=W/2-40,roadTopR=W/2+40,roadBotL=70,roadBotR=W-70;
-ctx.fillStyle=x.weather==="rain"?"#2a2a2a":"#3a3a3a";
-ctx.beginPath();ctx.moveTo(roadTopL,horizon);ctx.lineTo(roadTopR,horizon);ctx.lineTo(roadBotR,H);ctx.lineTo(roadBotL,H);ctx.closePath();ctx.fill();
-ctx.strokeStyle="#f1c40f";ctx.lineWidth=2;
-ctx.beginPath();ctx.moveTo(roadTopL+8,horizon);ctx.lineTo(roadBotL+12,H);ctx.stroke();
-ctx.beginPath();ctx.moveTo(roadTopR-8,horizon);ctx.lineTo(roadBotR-12,H);ctx.stroke();
-ctx.strokeStyle="#ddd";ctx.lineWidth=3;
-const dashScroll=(x.rs*4)%80;
-for(let i=0;i<12;i++){const t=i/12;const y=horizon+(H-horizon)*t+(dashScroll/80)*(H-horizon)/12;const scale=0.1+t*0.9;const cx=W/2;const w=3*scale;const len=15*scale;ctx.fillRect(cx-w/2,y,w,len);}
-x.cars.forEach(c=>{
-const t=Math.min(1,Math.max(0,(c.y+100)/H));
-const scale=0.2+t*1.2;
-const screenY=horizon+(H-horizon)*(c.y/H);
-const centerX=(c.x/W)*(roadBotR-roadBotL)+roadBotL;
-const centerTopX=(c.x/W)*(roadTopR-roadTopL)+roadTopL;
-const finalX=centerX*t+centerTopX*(1-t);
-const finalW=c.w*scale*1.6,finalH=c.h*scale*1.6;
-if(c.y>-50&&c.y<H){drawCar(finalX,screenY,finalW,finalH,c.c,c.type,0,0);}
-});
-const car=getCar();
-ctx.fillStyle=car.color;
-ctx.beginPath();ctx.moveTo(W*0.15,H);ctx.lineTo(W*0.2,H*0.72);ctx.lineTo(W*0.8,H*0.72);ctx.lineTo(W*0.85,H);ctx.closePath();ctx.fill();
-ctx.fillStyle="rgba(0,0,0,.3)";ctx.fillRect(W*0.25,H*0.75,W*0.5,4);
-ctx.fillStyle="rgba(0,0,0,.2)";ctx.fillRect(W*0.3,H*0.8,W*0.4,3);
-if(x.weather==="rain"){
-ctx.strokeStyle="#111";ctx.lineWidth=3;
-const wiperAngle=Math.sin(Date.now()/300)*0.3;
-ctx.beginPath();ctx.moveTo(W*0.3,H*0.72);ctx.lineTo(W*0.3+Math.cos(-0.8+wiperAngle)*120,H*0.72+Math.sin(-0.8+wiperAngle)*60);ctx.stroke();
-ctx.beginPath();ctx.moveTo(W*0.7,H*0.72);ctx.lineTo(W*0.7-Math.cos(-0.8+wiperAngle)*120,H*0.72+Math.sin(-0.8+wiperAngle)*60);ctx.stroke();
-}
-ctx.strokeStyle="rgba(0,0,0,.7)";ctx.lineWidth=8;
-ctx.beginPath();ctx.arc(W/2,H+80,120,Math.PI,0);ctx.stroke();
-ctx.fillStyle="rgba(20,20,20,.9)";ctx.beginPath();ctx.arc(W/2,H+80,40,Math.PI,0);ctx.fill();
-}
-
-function drawCar(x,y,w,h,col,type="sedan",ti=0,pl=0){
+function drawCar(x,y,w,h,col,type="sedan",ti=0,pl=0,isNight=false){
 ctx.save();ctx.translate(x,y);if(ti)ctx.rotate(ti*.05);
 ctx.fillStyle="rgba(0,0,0,.55)";rr(-w/2+3,-h/2+3,w,h,6);ctx.fill();
+
+if(isNight){
+ctx.shadowColor="#fff9c4";ctx.shadowBlur=15;
+ctx.fillStyle="#fff9c4";
+ctx.fillRect(-w/2+3,-h/2-2,w-6,4);
+ctx.shadowBlur=0;
+}
+
 if(type==="prius"){
 const body="#e8f0e8",roof="#f5f5f5",glass="#4a6a7a";
 ctx.fillStyle=col;rr(-w/2,-h/2,w,h,8);ctx.fill();
@@ -510,6 +524,10 @@ ctx.fillStyle="#9cf";ctx.font="bold 11px 'Courier New'";ctx.fillText("🌧️ Д
 if(x.mode==="oncoming"){
 ctx.fillStyle="rgba(233,69,96,.5)";ctx.fillRect(10,92,120,22);
 ctx.fillStyle="#fff";ctx.font="bold 11px 'Courier New'";ctx.fillText("🏁 ВСТРЕЧКА",20,108);
+}
+if(x.view==="night"){
+ctx.fillStyle="rgba(100,50,200,.5)";ctx.fillRect(10,120,90,22);
+ctx.fillStyle="#c9f";ctx.font="bold 11px 'Courier New'";ctx.fillText("🌙 НОЧЬ",20,136);
 }
 }
 
