@@ -10,17 +10,17 @@ body{background:#000;color:#fff;font-family:'Courier New',monospace;display:flex
 #game{width:100%;max-width:560px;background:#111;border-radius:12px;padding:10px;position:relative;height:100vh;max-height:900px;display:flex;flex-direction:column;overflow:hidden}
 h1{text-align:center;color:#f1c40f;font-size:24px;margin:14px 0 6px;letter-spacing:3px;text-shadow:0 0 20px rgba(241,196,15,.5)}
 .subtitle{text-align:center;color:#666;font-size:11px;margin-bottom:14px;letter-spacing:2px}
-.screen{display:none;flex:1;flex-direction:column;align-items:center;justify-content:flex-start;padding:8px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.screen{display:none;flex:1;flex-direction:column;align-items:center;justify-content:flex-start;padding:8px;overflow-y:auto;-webkit-overflow-scrolling:touch;position:relative;z-index:1}
 .screen.active{display:flex}
 #scGame{overflow:hidden;justify-content:center;padding:0}
-.menu-btn{display:block;width:100%;padding:16px;margin:7px 0;background:linear-gradient(135deg,#2c3e50,#34495e);color:#fff;border:2px solid #444;border-radius:12px;font-family:inherit;font-size:15px;font-weight:bold;cursor:pointer;letter-spacing:1px;text-align:center}
+.menu-btn{display:block;width:100%;padding:16px;margin:7px 0;background:linear-gradient(135deg,#2c3e50,#34495e);color:#fff;border:2px solid #444;border-radius:12px;font-family:inherit;font-size:15px;font-weight:bold;cursor:pointer;letter-spacing:1px;text-align:center;position:relative;z-index:2}
 .menu-btn:active{transform:scale(.97)}
 .menu-btn.blue{background:linear-gradient(135deg,#00b4d8,#0077b6);border-color:#00b4d8}
 .menu-btn.pink{background:linear-gradient(135deg,#c98b8b,#a56b6b);border-color:#c98b8b}
 .menu-btn.gray{background:linear-gradient(135deg,#95a5a6,#7f8c8d);border-color:#95a5a6}
 .menu-btn.gray2{background:linear-gradient(135deg,#bdc3c7,#95a5a6);border-color:#bdc3c7;color:#333}
 .top-buttons{display:flex;gap:8px;width:100%;margin-bottom:12px}
-.top-buttons button{flex:1;padding:8px 6px;border-radius:20px;font-family:inherit;font-size:10px;cursor:pointer;font-weight:bold;border:1px solid #444;background:rgba(255,255,255,.08);color:#ccc}
+.top-buttons button{flex:1;padding:8px 6px;border-radius:20px;font-family:inherit;font-size:10px;cursor:pointer;font-weight:bold;border:1px solid #444;background:rgba(255,255,255,.08);color:#ccc;position:relative;z-index:2}
 .top-buttons button.owner{background:linear-gradient(135deg,#f1c40f,#d4ac0d);color:#000;border-color:#f1c40f}
 .coins-display{text-align:center;color:#f1c40f;font-size:18px;font-weight:bold;margin-top:auto;padding:16px 0 8px}
 canvas{display:block;width:100%;height:auto;border-radius:8px;touch-action:none;background:#000}
@@ -31,7 +31,8 @@ canvas{display:block;width:100%;height:auto;border-radius:8px;touch-action:none;
 .btn{display:block;width:100%;padding:11px;margin:5px 0;background:#e94560;color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:13px;font-weight:bold;cursor:pointer}
 .btn:active{transform:scale(.97)}
 .btn.green{background:#2ecc71}.btn.blue{background:#3498db}.btn.gold{background:#f39c12}.btn.dark{background:#2c2c2c;border:1px solid #666}.btn.purple{background:#9b59b6}
-.overlay{position:absolute;inset:0;background:rgba(10,10,20,.96);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;border-radius:12px;padding:16px;text-align:center;z-index:10;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.overlay{position:absolute;inset:0;background:rgba(10,10,20,.96);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;border-radius:12px;padding:16px;text-align:center;z-index:50;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.overlay.hidden{display:none!important;pointer-events:none!important}
 .hidden{display:none!important}
 .stat{font-size:13px;margin:3px 0}
 .big{font-size:22px;color:#f1c40f;font-weight:bold}
@@ -55,16 +56,15 @@ canvas{display:block;width:100%;height:auto;border-radius:8px;touch-action:none;
 .toggle-view{display:flex;gap:8px;margin:8px 0;width:100%}
 .toggle-view button{flex:1;padding:10px;background:#0f3460;border:2px solid #444;border-radius:8px;color:#fff;font-family:inherit;font-size:12px;font-weight:bold;cursor:pointer}
 .toggle-view button.active{background:#e94560;border-color:#f1c40f}
-/* Сценка — тонкая полоска сверху */
-#cutscene{position:absolute;top:0;left:0;right:0;background:rgba(0,0,0,.9);z-index:30;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:10px 12px;text-align:center;border-radius:12px 12px 0 0;border-bottom:2px solid #f1c40f;pointer-events:none}
+#cutscene{position:absolute;top:8px;left:8px;right:8px;background:rgba(0,0,0,.88);z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:8px 12px;text-align:center;border-radius:8px;border:1px solid #f1c40f;pointer-events:none;box-shadow:0 4px 20px rgba(0,0,0,.6)}
+#cutscene.hidden{display:none!important}
 .cs-line{font-size:12px;margin:2px 0;opacity:0;transition:opacity .3s;color:#fff;line-height:1.3}
 .cs-line.show{opacity:1}
 .cs-bean{color:#f1c40f;font-weight:bold}
 .cs-tem{color:#c39bd3;font-weight:bold}
 .cs-deep{color:#5dade2;font-weight:bold}
 </style>
-</head>
-<body>
+</head><body>
 <div id="game">
 
 <div class="screen active" id="scMenu">
@@ -307,13 +307,13 @@ document.getElementById("adminPass").addEventListener("keydown",e=>{if(e.key==="
 // ===== ВЛАДЕЛЕЦ =====
 const OWNER_PASS="67CodeBean3902";
 function openOwnerLogin(){beep(440,.05);document.getElementById("ownerLogin").classList.remove("hidden");document.getElementById("ownerPass").value="";document.getElementById("ownerError").textContent="";setTimeout(()=>document.getElementById("ownerPass").focus(),100)}
-function checkOwnerPass(){const v=document.getElementById("ownerPass").value;if(v===OWNER_PASS){beep(880,.1,"sine",.1);setTimeout(()=>beep(1320,.15,"sine",.1),80);document.getElementById("ownerLogin").classList.add("hidden");document.getElementById("ownerPanel").classList.remove("hidden");document.getElementById("ownerCoins").textContent=coins;document.getElementById("ownerCarCount").textContent=ownerCars.length}else{beep(200,.2,"sawtooth",.15);document.getElementById("ownerError").textContent="❌ НЕВЕРНЫЙ ПАРОЛЬ";document.getElementById("ownerPass").value=""}}
+function checkOwnerPass(){const v=document.getElementById("ownerPass").value;if(v===OWNER_PASS){beep(880,.1,"sine",.1);setTimeout(()=>beep(1320,.15,"sine",.1),80);document.getElementById("ownerLogin").classList.add("hidden");document.getElementById("ownerPanel").classList.remove("hidden");document.getElementById("ownerCoins").textContent=coins;document.getElementById("ownerCarCount").textContent=ownerCars.length;if(ownerCard)document.getElementById("cardStatus").textContent="Карта: 🎴 Золотая"}else{beep(200,.2,"sawtooth",.15);document.getElementById("ownerError").textContent="❌ НЕВЕРНЫЙ ПАРОЛЬ";document.getElementById("ownerPass").value=""}}
 function closeOwner(){beep(440,.05);document.getElementById("ownerLogin").classList.add("hidden");document.getElementById("ownerPanel").classList.add("hidden")}
 function giveCard(){if(ownerCard){alert("Карта уже выдана (лимит 1)");return}ownerCard=true;document.getElementById("cardStatus").textContent="Карта: 🎴 Золотая";beep(660,.1,"sine",.1);setTimeout(()=>beep(1320,.2,"sine",.1),100)}
 function ownerGiveCar(id){if(ownerCars.length>=3){alert("Лимит машин во владельце: 3");return}ownerCars.push(id);up.car=id;save();document.getElementById("ownerCarCount").textContent=ownerCars.length;beep(660,.1,"sine",.1)}
 document.getElementById("ownerPass").addEventListener("keydown",e=>{if(e.key==="Enter")checkOwnerPass()});
 
-// ===== СЦЕНКА (сверху, игрок продолжает ехать) =====
+// ===== СЦЕНКА (мгновенные эффекты) =====
 function runAdminCutscene(){
 if(cutsceneRunning)return;
 cutsceneRunning=true;
@@ -328,27 +328,24 @@ setTimeout(()=>{
 cs.classList.add("hidden");
 cutsceneRunning=false;
 cutsceneCount++;
-if(g&&g.run){
-g.catCarTimer=Date.now()+30000;
-g.cars=[];
-g.clearCarsUntil=Date.now()+4000;
-g.bigCarUntil=Date.now()+4000;
-}
-},900);
+},1000);
 return;
 }
 const el=document.getElementById(lines[i]);
 el.classList.add("show");
 beep(440+i*80,.08,"sine",.08);
+if(g&&g.run){
+if(i===3){g.catCarTimer=Date.now()+30000}
+if(i===5){g.cars=[];g.clearCarsUntil=Date.now()+4000;g.bigCarUntil=Date.now()+4000}
+}
 i++;
-setTimeout(showNext,900);
+setTimeout(showNext,1100);
 };
 showNext();
 }
-function maybeTriggerCutscene(){
-if(cutsceneCount>=2)return;
-if(Math.random()<0.2){runAdminCutscene()}
-}// ===== ИГРА =====
+function maybeTriggerCutscene(){if(cutsceneCount>=2)return;if(Math.random()<0.2){runAdminCutscene()}}
+
+/* ПРОДОЛЖЕНИЕ В ЧАСТИ 4 → */// ===== ИГРА =====
 function startGame(){
 initAudio();
 document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
@@ -390,7 +387,6 @@ function loop(){if(!g||!g.run)return;update();draw();requestAnimationFrame(loop)
 
 function update(){
 const x=g;
-// DEEPSEEK эффект: убрать машины (игрок едет!)
 if(Date.now()<x.clearCarsUntil){x.cars=[]}
 const rainPenalty=x.weather==="rain"?0.85:1;
 x.spd=Math.min(x.ms,60+x.ov*3);
@@ -404,14 +400,11 @@ if(x.st>x.si){x.st=0;x.si=Math.max(28,65-x.ov*1.5);spawn()}
 x.cars.forEach(c=>{if(x.mode==="oncoming")c.y+=sf*c.rs*2.8;else c.y+=sf*c.rs});
 x.cars=x.cars.filter(c=>c.y<H+150&&c.y>-350);
 x.cars.forEach(c=>{if(!c.ot&&c.y>x.p.y+40){c.ot=1;x.ov++;x.lastOvertakeTime=Date.now();const pts=x.mode==="oncoming"?Math.floor((20+x.spd/12)*x.mg):Math.floor((10+x.spd/20)*x.mg);x.sc+=pts;beep(880,.08,"square",.06)}});
-
-// ФИКС бага: если 15 сек без обгонов — конец
 if(Date.now()-x.lastOvertakeTime>15000&&x.ov<3){
 x.run=0;stopEngine();
 setTimeout(()=>{document.getElementById("gameover").classList.remove("hidden");document.getElementById("finalOvertakes").textContent=x.ov;document.getElementById("finalScore").textContent=0;document.getElementById("finalSpeed").textContent="0";document.getElementById("earnedCoins").textContent=0},300);
 return;
 }
-
 if(x.weather==="rain"){x.rainDrops.forEach(d=>{d.y+=d.sp*(x.spd/60);d.x-=1.5;if(d.y>H){d.y=-10;d.x=Math.random()*W}})}
 x.sceneryTimer++;
 if(x.sceneryTimer>150){x.sceneryTimer=0;const types=["forest","city","village","railway"];x.sceneryType=types[Math.floor(Math.random()*types.length)]}
@@ -527,33 +520,22 @@ ctx.beginPath();ctx.moveTo(w/2-20,-h/2);ctx.lineTo(w/2-12,-h/2-10);ctx.lineTo(w/
 ctx.fillStyle="#f5c6e0";rr(-w/2+4,-h/2+2,w-8,14,4);ctx.fill();
 ctx.fillStyle="#000";ctx.beginPath();ctx.arc(-8,-h/2+8,2,0,7);ctx.fill();ctx.beginPath();ctx.arc(8,-h/2+8,2,0,7);ctx.fill();
 ctx.fillStyle="#e91e63";ctx.beginPath();ctx.arc(0,-h/2+11,1.5,0,7);ctx.fill();
-ctx.strokeStyle="#000";ctx.lineWidth=1;
-ctx.beginPath();ctx.moveTo(-10,-h/2+11);ctx.lineTo(-20,-h/2+9);ctx.stroke();
-ctx.beginPath();ctx.moveTo(-10,-h/2+12);ctx.lineTo(-20,-h/2+13);ctx.stroke();
-ctx.beginPath();ctx.moveTo(10,-h/2+11);ctx.lineTo(20,-h/2+9);ctx.stroke();
-ctx.beginPath();ctx.moveTo(10,-h/2+12);ctx.lineTo(20,-h/2+13);ctx.stroke();
 ctx.fillStyle="#9b59b6";rr(-w/2+4,-h/2+18,w-8,h-24,4);ctx.fill();
-ctx.strokeStyle="#9b59b6";ctx.lineWidth=4;
-ctx.beginPath();ctx.moveTo(0,h/2-4);ctx.quadraticCurveTo(w/2+5,h/2-10,w/2+8,h/2-20);ctx.stroke();
 }
 else if(type==="van"){
 ctx.fillStyle="#1a4a2a";rr(-w/2,-h/2,w,h,5);ctx.fill();
 ctx.fillStyle="#0f2e18";rr(-w/2+3,-h/2+3,w-6,16,3);ctx.fill();
 ctx.fillStyle="#1a3a5a";ctx.fillRect(-w/2+4,-h/2+22,8,h-42);ctx.fillRect(w/2-12,-h/2+22,8,h-42);
-ctx.fillStyle="rgba(0,0,0,.35)";ctx.fillRect(-w/2+4,h/2-20,w-8,4);
 ctx.fillStyle="#fff";ctx.fillRect(-w/2+3,-h/2,8,4);ctx.fillRect(w/2-11,-h/2,8,4);
 ctx.fillStyle=pl?"#ff5555":"#c0392b";ctx.fillRect(-w/2+3,h/2-5,8,4);ctx.fillRect(w/2-11,h/2-5,8,4);
-ctx.fillStyle="#000";ctx.fillRect(-w/2-1,-h/2+14,3,16);ctx.fillRect(w/2-2,-h/2+14,3,16);ctx.fillRect(-w/2-1,h/2-30,3,16);ctx.fillRect(w/2-2,h/2-30,3,16);
 }
 else if(type==="audi"){
 ctx.fillStyle=col;rr(-w/2,-h/2,w,h,5);ctx.fill();
 ctx.fillStyle="#222";rr(-w/2+2,-h/2+2,w-4,18,3);ctx.fill();
 ctx.fillStyle="#1a2a3a";rr(-w/2+4,-h/2+22,w-8,14,3);ctx.fill();
 ctx.fillStyle="#3a3a3a";rr(-w/2+5,-h/2+38,w-10,h-62,3);ctx.fill();
-ctx.fillStyle="#1a2a3a";rr(-w/2+4,h/2-22,w-8,14,3);ctx.fill();
 ctx.fillStyle="#fff";ctx.fillRect(-w/2+3,-h/2+1,8,4);ctx.fillRect(w/2-11,-h/2+1,8,4);
 ctx.fillStyle=pl?"#ff5555":"#c0392b";ctx.fillRect(-w/2+3,h/2-5,8,4);ctx.fillRect(w/2-11,h/2-5,8,4);
-ctx.fillStyle="#000";ctx.fillRect(-w/2-1,-h/2+10,3,14);ctx.fillRect(w/2-2,-h/2+10,3,14);ctx.fillRect(-w/2-1,h/2-24,3,14);ctx.fillRect(w/2-2,h/2-24,3,14);
 }
 else if(type==="tesla"){
 ctx.fillStyle=col;rr(-w/2,-h/2,w,h,8);ctx.fill();
@@ -564,7 +546,6 @@ ctx.fillStyle="#333";rr(-w/2+6,-h/2+22,w-12,h-44,3);ctx.fill();
 ctx.fillStyle="#f39c12";ctx.beginPath();ctx.arc(0,-h/2+22,3,0,7);ctx.fill();
 ctx.fillStyle="#fff";ctx.fillRect(-w/2+4,-h/2+1,9,4);ctx.fillRect(w/2-13,-h/2+1,9,4);
 ctx.fillStyle=pl?"#ff5555":"#c0392b";ctx.fillRect(-w/2+3,h/2-5,9,4);ctx.fillRect(w/2-12,h/2-5,9,4);
-ctx.fillStyle="#111";ctx.fillRect(-w/2-1,-h/2+10,3,14);ctx.fillRect(w/2-2,-h/2+10,3,14);ctx.fillRect(-w/2-1,h/2-24,3,14);ctx.fillRect(w/2-2,h/2-24,3,14);
 }
 else if(type==="f1"){
 ctx.fillStyle="#1a3a8a";rr(-w/2,-h/2+8,w,h-16,4);ctx.fill();
@@ -572,93 +553,67 @@ ctx.fillStyle="#0d1f4a";rr(-w/2+4,-h/2+12,w-8,16,3);ctx.fill();
 ctx.fillStyle="#222";rr(-w/2+6,-h/2+32,w-12,h-58,3);ctx.fill();
 ctx.fillStyle="#0d1f4a";ctx.beginPath();ctx.moveTo(-w/2+8,h/2-26);ctx.lineTo(w/2-8,h/2-26);ctx.lineTo(w/2-6,h/2-10);ctx.lineTo(-w/2+6,h/2-10);ctx.closePath();ctx.fill();
 ctx.fillStyle="#f1c40f";ctx.fillRect(-w/2+2,-h/2+10,w-4,3);ctx.fillRect(-w/2+2,-h/2+16,w-4,3);
-ctx.fillStyle="#0a0a0a";ctx.fillRect(-w/2-2,-h/2+18,4,16);ctx.fillRect(w/2-2,-h/2+18,4,16);ctx.fillRect(-w/2-2,h/2-34,4,16);ctx.fillRect(w/2-2,h/2-34,4,16);
-ctx.fillStyle="#ff0000";ctx.fillRect(-w/2+2,h/2-6,6,3);ctx.fillRect(w/2-8,h/2-6,6,3);
 ctx.fillStyle="#fff";ctx.fillRect(-w/2+3,-h/2+8,7,4);ctx.fillRect(w/2-10,-h/2+8,7,4);
 }
 else if(type==="bus"){
 ctx.fillStyle="#f39c12";rr(-w/2,-h/2,w,h,4);ctx.fill();
 ctx.fillStyle="#1a1a1a";rr(-w/2+3,-h/2+4,w-6,14,2);ctx.fill();
 ctx.fillStyle="#1a3a5a";ctx.fillRect(-w/2+5,-h/2+24,10,h-48);ctx.fillRect(w/2-15,-h/2+24,10,h-48);
-ctx.fillStyle="#1a1a1a";ctx.fillRect(-w/2,-h/2+22,w,3);ctx.fillRect(-w/2,h/2-22,w,3);
 ctx.fillStyle="#fff";ctx.fillRect(-w/2+4,-h/2,10,5);ctx.fillRect(w/2-14,-h/2,10,5);
 ctx.fillStyle=pl?"#ff5555":"#c0392b";ctx.fillRect(-w/2+4,h/2-5,10,4);ctx.fillRect(w/2-14,h/2-5,10,4);
-ctx.fillStyle="#000";ctx.fillRect(-w/2-2,-h/2+16,4,18);ctx.fillRect(w/2-2,-h/2+16,4,18);ctx.fillRect(-w/2-2,h/2-34,4,18);ctx.fillRect(w/2-2,h/2-34,4,18);
 }
 else if(type==="skyline"){
-const glass="#1a2a3a";
 ctx.fillStyle=col;rr(-w/2,-h/2,w,h,5);ctx.fill();
 ctx.fillStyle="#fff";ctx.fillRect(-6,-h/2+2,5,h-4);ctx.fillRect(1,-h/2+2,5,h-4);
 ctx.fillStyle="#2c5a8c";rr(-w/2+2,-h/2+2,w-4,20,3);ctx.fill();
-ctx.fillStyle="#111";ctx.fillRect(-w/2+8,-h/2+6,w-16,4);
-ctx.fillStyle=glass;ctx.beginPath();ctx.moveTo(-w/2+4,-h/2+24);ctx.lineTo(w/2-4,-h/2+24);ctx.lineTo(w/2-6,-h/2+36);ctx.lineTo(-w/2+6,-h/2+36);ctx.closePath();ctx.fill();
 ctx.fillStyle="#3a6a9c";rr(-w/2+5,-h/2+36,w-10,h-62,3);ctx.fill();
 ctx.fillStyle="#fff";ctx.fillRect(-4,-h/2+42,8,h-54);
-ctx.fillStyle=glass;ctx.beginPath();ctx.moveTo(-w/2+6,h/2-26);ctx.lineTo(w/2-6,h/2-26);ctx.lineTo(w/2-4,h/2-10);ctx.lineTo(-w/2+4,h/2-10);ctx.closePath();ctx.fill();
-ctx.fillStyle="#0a0a0a";ctx.fillRect(-w/2+2,h/2-10,w-4,5);
 ctx.fillStyle="#fff";ctx.fillRect(-w/2+3,-h/2+1,9,4);ctx.fillRect(w/2-12,-h/2+1,9,4);
 ctx.fillStyle=pl?"#ff3333":"#8b0000";ctx.beginPath();ctx.arc(-w/2+9,h/2-5,3,0,7);ctx.fill();ctx.beginPath();ctx.arc(w/2-9,h/2-5,3,0,7);ctx.fill();
-ctx.fillStyle="#0a0a0a";ctx.fillRect(-w/2-1,-h/2+12,3,14);ctx.fillRect(w/2-2,-h/2+12,3,14);ctx.fillRect(-w/2-1,h/2-26,3,14);ctx.fillRect(w/2-2,h/2-26,3,14);
-ctx.strokeStyle="rgba(0,0,0,.5)";ctx.lineWidth=1;rr(-w/2,-h/2,w,h,5);ctx.stroke();
 }
 else if(type==="prius"){
-const body="#e8f0e8",roof="#f5f5f5",glass="#4a6a7a";
 ctx.fillStyle=col;rr(-w/2,-h/2,w,h,8);ctx.fill();
-ctx.fillStyle=body;rr(-w/2+3,-h/2+3,w-6,h-6,7);ctx.fill();
-ctx.fillStyle=glass;rr(-w/2+5,-h/2+4,w-10,16,4);ctx.fill();
-ctx.fillStyle=glass;rr(-w/2+5,h/2-20,w-10,16,4);ctx.fill();
-ctx.fillStyle=roof;rr(-w/2+6,-h/2+22,w-12,h-46,3);ctx.fill();
+ctx.fillStyle="#f5f5f5";rr(-w/2+3,-h/2+3,w-6,h-6,7);ctx.fill();
+ctx.fillStyle="#4a6a7a";rr(-w/2+5,-h/2+4,w-10,16,4);ctx.fill();
+ctx.fillStyle="#4a6a7a";rr(-w/2+5,h/2-20,w-10,16,4);ctx.fill();
 ctx.fillStyle="#fff";ctx.fillRect(-w/2+4,-h/2+1,9,4);ctx.fillRect(w/2-13,-h/2+1,9,4);
 ctx.fillStyle=pl?"#ff5555":"#c0392b";ctx.fillRect(-w/2+3,h/2-5,9,4);ctx.fillRect(w/2-12,h/2-5,9,4);
-ctx.fillStyle="#111";ctx.fillRect(-w/2-1,-h/2+10,3,14);ctx.fillRect(w/2-2,-h/2+10,3,14);ctx.fillRect(-w/2-1,h/2-24,3,14);ctx.fillRect(w/2-2,h/2-24,3,14);
 }
 else if(type==="bmw"){
 ctx.fillStyle=col;rr(-w/2,-h/2,w,h,6);ctx.fill();
 ctx.fillStyle="#222";rr(-w/2+3,-h/2+2,w-6,18,4);ctx.fill();
 ctx.fillStyle="#1a2a3a";rr(-w/2+5,-h/2+22,w-10,16,4);ctx.fill();
 ctx.fillStyle="#333";rr(-w/2+6,-h/2+38,w-12,h-62,3);ctx.fill();
-ctx.fillStyle="#1a2a3a";rr(-w/2+5,h/2-22,w-10,14,4);ctx.fill();
-ctx.fillStyle="#4a90d9";ctx.beginPath();ctx.arc(0,-h/2+11,5,0,7);ctx.fill();
 ctx.fillStyle="#fff";ctx.fillRect(-w/2+4,-h/2+2,9,4);ctx.fillRect(w/2-13,-h/2+2,9,4);
 ctx.fillStyle=pl?"#ff5555":"#c0392b";ctx.fillRect(-w/2+4,h/2-5,9,4);ctx.fillRect(w/2-13,h/2-5,9,4);
-ctx.fillStyle="#0a0a0a";ctx.fillRect(-w/2-1,-h/2+10,3,15);ctx.fillRect(w/2-2,-h/2+10,3,15);ctx.fillRect(-w/2-1,h/2-24,3,15);ctx.fillRect(w/2-2,h/2-24,3,15);
 }
 else if(type==="mustang"){
 ctx.fillStyle=col;rr(-w/2,-h/2,w,h,6);ctx.fill();
-ctx.fillStyle="rgba(0,0,0,.4)";ctx.fillRect(-w/2+4,-h/2+14,w-8,5);ctx.fillRect(-w/2+4,-h/2+34,w-8,5);
 ctx.fillStyle="#1a1a1a";rr(-w/2+4,-h/2+2,w-8,11,3);ctx.fill();
-ctx.fillStyle="#2a2a2a";rr(-w/2+5,-h/2+22,w-10,16,3);ctx.fill();rr(-w/2+6,h/2-20,w-12,12,3);ctx.fill();
+ctx.fillStyle="#2a2a2a";rr(-w/2+5,-h/2+22,w-10,16,3);ctx.fill();
 ctx.fillStyle="#fff";ctx.fillRect(-w/2+3,-h/2,10,4);ctx.fillRect(w/2-13,-h/2,10,4);
 ctx.fillStyle=pl?"#ff5555":"#c0392b";ctx.fillRect(-w/2+3,h/2-5,10,4);ctx.fillRect(w/2-13,h/2-5,10,4);
-ctx.fillStyle="#0a0a0a";ctx.fillRect(-w/2-1,-h/2+10,3,15);ctx.fillRect(w/2-2ctx.fillStyle="#0a0a0a";ctx.fillRect(-w/2-1,-h/2+10,3,15);ctx.fillRect(w/2-2,-h/2+10,3,15);ctx.fillRect(-w/2-1,h/2-24,3,15);ctx.fillRect(w/2-2,h/2-24,3,15);
 }
 else if(type==="lambo"){
 ctx.fillStyle=col;ctx.beginPath();ctx.moveTo(-w/2+2,-h/2);ctx.lineTo(w/2-2,-h/2);ctx.lineTo(w/2,h/2);ctx.lineTo(-w/2,h/2);ctx.closePath();ctx.fill();
 ctx.fillStyle="#111";rr(-w/2+3,-h/2+2,w-6,18,3);ctx.fill();
 ctx.fillStyle="#222";ctx.beginPath();ctx.moveTo(-w/2+5,-h/2+22);ctx.lineTo(w/2-5,-h/2+22);ctx.lineTo(w/2-7,-h/2+36);ctx.lineTo(-w/2+7,-h/2+36);ctx.closePath();ctx.fill();
-ctx.fillStyle="#222";ctx.beginPath();ctx.moveTo(-w/2+7,h/2-24);ctx.lineTo(w/2-7,h/2-24);ctx.lineTo(w/2-5,h/2-10);ctx.lineTo(-w/2+5,h/2-10);ctx.closePath();ctx.fill();
-ctx.fillStyle="#0a0a0a";ctx.fillRect(-w/2+1,h/2-12,w-2,5);
 ctx.fillStyle="#fff";ctx.fillRect(-w/2+2,-h/2,10,4);ctx.fillRect(w/2-12,-h/2,10,4);
 ctx.fillStyle=pl?"#ff3333":"#8b0000";ctx.fillRect(-w/2+2,h/2-5,10,4);ctx.fillRect(w/2-12,h/2-5,10,4);
-ctx.fillStyle="#0a0a0a";ctx.fillRect(-w/2-1,-h/2+10,3,15);ctx.fillRect(w/2-2,-h/2+10,3,15);ctx.fillRect(-w/2-1,h/2-24,3,15);ctx.fillRect(w/2-2,h/2-24,3,15);
 }
 else if(type==="truck"){
 ctx.fillStyle="#5d6d7e";rr(-w/2,-h/2,w,h,4);ctx.fill();
 ctx.fillStyle="#2c3e50";rr(-w/2+3,-h/2+3,w-6,22,3);ctx.fill();
-ctx.fillStyle="#1a2a3a";ctx.fillRect(-w/2+5,h/2-30,w-10,24);
 ctx.fillStyle="#34495e";ctx.fillRect(-w/2+4,-h/2+28,w-8,h-62);
 ctx.fillStyle="#fff";ctx.fillRect(-w/2+3,-h/2,8,5);ctx.fillRect(w/2-11,-h/2,8,5);
 ctx.fillStyle=pl?"#ff5555":"#c0392b";ctx.fillRect(-w/2+3,h/2-5,8,5);ctx.fillRect(w/2-11,h/2-5,8,5);
-ctx.fillStyle="#000";ctx.fillRect(-w/2-2,-h/2+16,4,18);ctx.fillRect(w/2-2,-h/2+16,4,18);ctx.fillRect(-w/2-2,h/2-34,4,18);ctx.fillRect(w/2-2,h/2-34,4,18);
 }
 else{
 ctx.fillStyle=col;rr(-w/2,-h/2,w,h,5);ctx.fill();
 ctx.fillStyle="rgba(0,0,0,.4)";rr(-w/2+5,-h/2+20,w-10,h-38,3);ctx.fill();
 ctx.fillStyle="rgba(150,200,255,.5)";rr(-w/2+6,-h/2+8,w-12,12,2);ctx.fill();
-ctx.fillStyle="rgba(150,200,255,.3)";rr(-w/2+6,h/2-20,w-12,10,2);ctx.fill();
 ctx.fillStyle="#fff";ctx.fillRect(-w/2+4,-h/2,8,5);ctx.fillRect(w/2-12,-h/2,8,5);
 ctx.fillStyle=pl?"#ff6b6b":"#e74c3c";ctx.fillRect(-w/2+4,h/2-6,8,5);ctx.fillRect(w/2-12,h/2-6,8,5);
-ctx.fillStyle="#0a0a0a";ctx.fillRect(-w/2-1,-h/2+10,3,15);ctx.fillRect(w/2-2,-h/2+10,3,15);ctx.fillRect(-w/2-1,h/2-24,3,15);ctx.fillRect(w/2-2,h/2-24,3,15);
 }
 ctx.restore();
 }
@@ -675,9 +630,6 @@ ctx.fillStyle="#2ecc71";ctx.font="bold 18px 'Courier New'";ctx.fillText("🏆 "+
 ctx.fillStyle="#aaa";ctx.font="10px 'Courier New'";ctx.fillText("Обгоны: "+x.ov,W-158,52);
 ctx.fillStyle="rgba(0,0,0,.65)";ctx.fillRect(W-110,68,100,28);
 ctx.fillStyle="#f1c40f";ctx.font="bold 14px 'Courier New'";ctx.fillText("💰 "+Math.floor(x.sc/4),W-100,88);
-if(x.weather==="rain"){ctx.fillStyle="rgba(100,150,255,.4)";ctx.fillRect(10,68,100,24);ctx.fillStyle="#9cf";ctx.font="bold 12px 'Courier New'";ctx.fillText("🌧️ ДОЖДЬ",20,85)}
-if(x.mode==="oncoming"){ctx.fillStyle="rgba(233,69,96,.5)";ctx.fillRect(10,98,130,24);ctx.fillStyle="#fff";ctx.font="bold 12px 'Courier New'";ctx.fillText("🏁 ВСТРЕЧКА",20,115)}
-if(x.view==="night"){ctx.fillStyle="rgba(100,50,200,.5)";ctx.fillRect(10,128,100,24);ctx.fillStyle="#c9f";ctx.font="bold 12px 'Courier New'";ctx.fillText("🌙 НОЧЬ",20,145)}
 if(Date.now()<x.catCarTimer){ctx.fillStyle="rgba(195,155,211,.6)";ctx.fillRect(10,158,140,24);ctx.fillStyle="#fff";ctx.font="bold 12px 'Courier New'";ctx.fillText("🐱 КОТ "+Math.ceil((x.catCarTimer-Date.now())/1000)+"с",20,175)}
 if(Date.now()<x.bigCarUntil){ctx.fillStyle="rgba(93,173,226,.6)";ctx.fillRect(10,188,140,24);ctx.fillStyle="#fff";ctx.font="bold 12px 'Courier New'";ctx.fillText("🚀 DEEPSEEK "+Math.ceil((x.bigCarUntil-Date.now())/1000)+"с",20,205)}
 }
